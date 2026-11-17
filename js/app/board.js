@@ -200,7 +200,10 @@ class BoardView {
     const w = this.el.clientWidth || 600
     const span = o.crop ? o.crop[2] - o.crop[0] + 1 : o.n
     const labels = o.labels && SES.settings.coords && w / (span + 2) >= 20
-    this.el.innerHTML = goSVG({...o, ghost: ghost == null ? null : ghost, ghostC: o.turn, labels, last: SES.settings.lastMark ? o.last : null})
+    // анимация камня только при первой отрисовке после хода, иначе наведение её повторяет
+    const pop = o.pop
+    o.pop = null
+    this.el.innerHTML = goSVG({...o, pop, ghost: ghost == null ? null : ghost, ghostC: o.turn, labels, last: SES.settings.lastMark ? o.last : null})
     this.el.setAttribute('aria-label', t('boardLabel', o.n))
     this.el.style.setProperty('--ar', o.crop ? ((o.crop[2] - o.crop[0] + 1.3) / (o.crop[3] - o.crop[1] + 1.3)).toFixed(3) : 1)
   }
