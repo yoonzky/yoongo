@@ -1,0 +1,120 @@
+/* Copyright (C) 2026 yoonzky. AGPL-3.0, see LICENSE */
+// тексты на русском и английском
+'use strict'
+
+let LANG = 'ru'
+
+// русское число: 1 камень, 2 камня, 5 камней
+function plural(n, f) {
+  const a = Math.abs(n) % 100, b = a % 10
+  if (a > 10 && a < 20) return f[2]
+  if (b == 1) return f[0]
+  if (b >= 2 && b <= 4) return f[1]
+  return f[2]
+}
+
+const TX = {
+  ru: {
+    today: 'Сегодня', newGame: 'Новая партия', tasks: 'Задачи', path: 'Путь', stats: 'Статистика', settings: 'Настройки', play: 'Играть', games: 'Партии', more: 'Ещё',
+    withBot: 'С ботом', twoPlayers: 'Вдвоём', capTitle: n => `Захват ${n}`, capture: 'Захват', size: n => `${n} на ${n}`,
+    lv0: 'Новичок', lv1: 'Лёгкий', lv2: 'Средний', lv3: 'Сильный',
+    pl0: 'Новичок', pl1: 'Лёгкие', pl2: 'Средние', pl3: 'Сложные',
+    hcapN: n => `фора ${n}`, komiN: k => `коми ${k}`, finished: 'закончена', scoringState: 'подсчёт', yourMoveL: 'ваш ход', yourMove: 'Ваш ход', botMove: 'ход бота', moveN: n => `ход ${n}`,
+    you: 'Вы', bot: 'Бот', black: 'Чёрные', white: 'Белые', taken: n => `взято ${n}`, takenOf: (n, m) => `взято ${n} из ${m}`,
+    youWon: 'Победа', youLost: 'Поражение', blackWon: 'Выиграли чёрные', whiteWon: 'Выиграли белые',
+    blackArea: 'Чёрные, камни и территория', whiteArea: 'Белые, камни и территория', komi: 'Коми',
+    by_resign: 'сдача', by_time: 'по времени', by_cap: 'захват',
+    again: 'Ещё партия', toNew: 'Новая партия', counting: 'Считаю территорию', blackAhead: 'Чёрные впереди', whiteAhead: 'Белые впереди',
+    deadNote: 'Полупрозрачные камни бот счёл мёртвыми. Нажмите на группу, чтобы поправить.', accept: 'Принять счёт', resume: 'Играть дальше',
+    pauseClock: 'Остановить часы', resumeClock: 'Запустить часы', clockPaused: 'Часы стоят', clockRuns: 'Часы идут', privacy: 'Конфиденциальность', srcCode: 'Исходный код', sources: 'Источники задач',
+    zoom: 'Масштаб доски', boardLabel: n => `Доска ${n} на ${n}. Стрелки выбирают пункт, Enter ставит камень`, undo: 'Отменить', pass: 'Пас', estimate: 'Оценка', record: 'Запись', passShort: 'пас', yourMoveRec: 'ваш ход', botMoveRec: 'бот думает',
+    suicide: 'Сюда нельзя, у камня не останется дыханий', koBan: 'Это ко. Забрать обратно можно после хода в другом месте',
+    botError: 'Движок не ответил, попробуйте ещё раз', botResigned: 'Бот сдался', botPassed: 'Бот пасует',
+    estB: x => `Примерно чёрные впереди на ${x}`, estW: x => `Примерно белые впереди на ${x}`,
+    resign: 'Сдаться', resignTurn: 'Сдаться за ходящего', resignQ: 'Сдать партию?', cancel: 'Отмена', delGame: 'Удалить партию', delQ: 'Удалить партию?', delText: 'Она пропадёт из списка, в статистику не попадёт.', delete: 'Удалить',
+    copySgf: 'Скопировать SGF', copied: 'Запись партии скопирована',
+    goal_live: 'Чёрные начинают и живут', goal_kill: 'Чёрные начинают и убивают', goal_capture: 'Чёрные начинают и захватывают', goal_save: 'Чёрные спасают свои камни',
+    goalShort_live: 'жизнь', goalShort_kill: 'убийство', goalShort_capture: 'захват', goalShort_save: 'спасение',
+    aboutKyu: k => `около ${k} кю`, kyuShort: k => `${k} кю`, dan1: '1 дан', nOf: (a, b) => `${a} из ${b}`, problemN: n => `Задача ${n}`,
+    correct: 'Верно.', solvedAfter: 'Решено, но не с первой попытки.', solvedHint: 'Решено с подсказкой.', solvedNote_live: 'Группа живёт.', solvedNote_kill: 'Группе не жить.', solvedNote_capture: 'Камни не уйдут.', solvedNote_save: 'Камни спасены.',
+    nextTask: 'Следующая', again2: 'Решить снова', wrong: 'Неверно.', wrongNote: 'Так соперник добивается своего.', hint: 'Подсказка', retry: 'Заново', nextShort: 'Следующая',
+    thinkingOpp: 'Соперник думает', goodContinue: 'Хорошо, продолжайте', illegal: 'Сюда ходить нельзя', oppPassed: 'Соперник пасует',
+    daily: 'Задача дня', solve: 'Решать', continue: 'Продолжить', yourRank: 'Ваша сила', noRank: 'Пока без оценки', noRankHint: 'Сыграйте пару партий с ботом или решите задачи', nextMark: k => `рубеж ${k} кю`,
+    noGames: 'Начатых партий нет.', q9: '9 на 9 с ботом', q13: '13 на 13', q19: '19 на 19',
+    opponent: 'Соперник', board: 'Доска', goal: 'Цель', territory: 'Территория', capWho: 'Кто первым возьмёт', botLevel: 'Сила бота', color: 'Цвет', random: 'Случайно',
+    handicap: 'Фора', komiDefault: 'Коми по умолчанию', clock: 'Часы', playBtn: 'Играть', none: 'нет', noKomi: 'не нужно',
+    stonesN: n => `${n} ${plural(n, ['камень', 'камня', 'камней'])}`, youBlack: 'вы играете чёрными', youWhite: 'вы играете белыми', colorRandom: 'цвет случайно',
+    noClock: 'без часов', byoOnly: s => `${s} с на ход`, clockFmt: (m, p, s) => `${m} мин, ${p} по ${s} с`,
+    solvedOf: (a, b) => `Решено ${a} из ${b}`, solvedW: 'решена', startedW: 'начата',
+    gamesWithBot: 'партий с ботом', wins: 'побед', tasksSolved: 'задач решено', approxRank: 'примерная сила', rankByWeek: 'Сила по неделям',
+    chartEmpty: 'График появится, когда оценка наберётся хотя бы за две недели.', vsBot: 'Против бота', level: 'Уровень', winsCol: 'Побед', gamesCol: 'Партий', noBotGames: 'Партий с ботом пока нет.',
+    solvedCol: 'Решено', totalCol: 'Всего', twoGamesN: n => `Партий вдвоём: ${n}`,
+    rankBasis: (g, p) => `по ${g} ${plural(g, ['партии', 'партиям', 'партиям'])} и ${p} ${plural(p, ['задаче', 'задачам', 'задачам'])}`,
+    stageTasks: 'Задачи этапа', stageBot: l => `Бот этапа, ${l}`, winsOf: (w, n) => `${w} ${plural(w, ['победа', 'победы', 'побед'])} из ${n}`, stageTasksBtn: 'Задачи этапа', stageBotBtn: 'Партия с ботом', later: 'позже, с уроками',
+    st0: 'Правила и взятие', st0d: 'атари, взятие, спасение камней', st1: 'Захват', st1d: 'погоня за камнями в два хода и дальше', st2: 'Глаза', st2d: 'два глаза, жизнь и убийство одним ходом',
+    st3: 'Жизнь и смерть', st3d: 'формы в углу и на краю, ответ на защиту', st4: 'Чтение', st4d: 'длинные варианты, вброс, ложный глаз',
+    st5: 'Дебют', st5d: 'углы, края, построение, дзёсэки', st6: 'Конец партии', st6d: 'ёсэ, счёт, тонкие ходы', st7: 'Сильная игра', st7d: 'чтение, оценка позиции, разбор партий',
+    collections: 'Сборники', colX: 'Сюаньсюань Цицзин', colG: 'Гуаньцзы Пу', colShort_x: 'Сюаньсюань Цицзин', colShort_g: 'Гуаньцзы Пу',
+    colSrc_x: 'Китай, 1349. Набор в SGF Jean-Pierre Vesinet, через u-go.net', colSrc_g: 'Китай, XVII век. Файлы Flygo, через u-go.net',
+    colNote: 'В задачах из книг одна линия решения. Ход, которого в книге нет, засчитывается как неверный, даже если он тоже работает. Цвета перекрашены, чтобы всегда начинали чёрные.',
+    goal_any: 'Чёрные начинают', bookLine: n => `в решении ${n} ${plural(n, ['ход', 'хода', 'ходов'])} чёрных`, solvedBook: 'Как в книге.', wrongBook: 'В книге другой ход.',
+    autoNext: 'Сразу к следующей задаче', autoNextNote: 'после верного решения через секунду', autoSoon: 'Дальше через секунду.',
+    look: 'Вид', theme: 'Тема', themeAuto: 'Как в системе', themeLight: 'Светлая', themeDark: 'Тёмная', language: 'Язык',
+    coords: 'Координаты', lastMark: 'Метка последнего хода', confirm: 'Подтверждать ход', confirmNote: 'на телефоне камень ставится вторым касанием', sound: 'Звук камня',
+    gameCap: 'Партия', scoring: 'Подсчёт', scoringNote: 'камни и территория, китайские правила', byArea: 'по площади', undoBot: 'Отмена хода против бота', about: 'О приложении', author: 'Автор',
+  },
+  en: {
+    today: 'Today', newGame: 'New game', tasks: 'Problems', path: 'Path', stats: 'Statistics', settings: 'Settings', play: 'Play', games: 'Games', more: 'More',
+    withBot: 'Versus bot', twoPlayers: 'Two players', capTitle: n => `Capture ${n}`, capture: 'Capture', size: n => `${n}x${n}`,
+    lv0: 'Beginner', lv1: 'Easy', lv2: 'Medium', lv3: 'Strong',
+    pl0: 'Beginner', pl1: 'Easy', pl2: 'Medium', pl3: 'Hard',
+    hcapN: n => `handicap ${n}`, komiN: k => `komi ${k}`, finished: 'finished', scoringState: 'counting', yourMoveL: 'your move', yourMove: 'Your move', botMove: 'bot to move', moveN: n => `move ${n}`,
+    you: 'You', bot: 'Bot', black: 'Black', white: 'White', taken: n => `captured ${n}`, takenOf: (n, m) => `captured ${n} of ${m}`,
+    youWon: 'You won', youLost: 'You lost', blackWon: 'Black wins', whiteWon: 'White wins',
+    blackArea: 'Black, stones and territory', whiteArea: 'White, stones and territory', komi: 'Komi',
+    by_resign: 'resignation', by_time: 'on time', by_cap: 'capture',
+    again: 'Play again', toNew: 'New game', counting: 'Counting territory', blackAhead: 'Black is ahead', whiteAhead: 'White is ahead',
+    deadNote: 'Faded stones were judged dead by the bot. Tap a group to change that.', accept: 'Accept score', resume: 'Keep playing',
+    pauseClock: 'Stop the clock', resumeClock: 'Start the clock', clockPaused: 'Clock stopped', clockRuns: 'Clock running', privacy: 'Privacy', srcCode: 'Source code', sources: 'Problem sources',
+    zoom: 'Board zoom', boardLabel: n => `Board ${n}x${n}. Arrow keys pick a point, Enter places a stone`, undo: 'Undo', pass: 'Pass', estimate: 'Estimate', record: 'Moves', passShort: 'pass', yourMoveRec: 'your move', botMoveRec: 'bot is thinking',
+    suicide: 'Not here, the stone would have no liberties', koBan: 'This is ko. Retake after a move elsewhere',
+    botError: 'The engine did not answer, try again', botResigned: 'The bot resigned', botPassed: 'The bot passes',
+    estB: x => `Black leads by about ${x}`, estW: x => `White leads by about ${x}`,
+    resign: 'Resign', resignTurn: 'Resign for the side to move', resignQ: 'Resign this game?', cancel: 'Cancel', delGame: 'Delete game', delQ: 'Delete this game?', delText: 'It leaves the list and does not count in statistics.', delete: 'Delete',
+    copySgf: 'Copy SGF', copied: 'Game record copied',
+    goal_live: 'Black to play and live', goal_kill: 'Black to play and kill', goal_capture: 'Black to play and capture', goal_save: 'Black to save the stones',
+    goalShort_live: 'live', goalShort_kill: 'kill', goalShort_capture: 'capture', goalShort_save: 'save',
+    aboutKyu: k => `about ${k} kyu`, kyuShort: k => `${k} kyu`, dan1: '1 dan', nOf: (a, b) => `${a} of ${b}`, problemN: n => `Problem ${n}`,
+    correct: 'Correct.', solvedAfter: 'Solved, though not on the first try.', solvedHint: 'Solved with a hint.', solvedNote_live: 'The group lives.', solvedNote_kill: 'The group cannot live.', solvedNote_capture: 'The stones cannot escape.', solvedNote_save: 'The stones are safe.',
+    nextTask: 'Next', again2: 'Solve again', wrong: 'Not quite.', wrongNote: 'This way the opponent gets what it wants.', hint: 'Hint', retry: 'Retry', nextShort: 'Next',
+    thinkingOpp: 'Opponent is thinking', goodContinue: 'Good, keep going', illegal: 'You cannot play here', oppPassed: 'The opponent passes',
+    daily: 'Problem of the day', solve: 'Solve', continue: 'Continue', yourRank: 'Your strength', noRank: 'No estimate yet', noRankHint: 'Play a couple of games with the bot or solve some problems', nextMark: k => `next mark ${k} kyu`,
+    noGames: 'No games in progress.', q9: '9x9 versus bot', q13: '13x13', q19: '19x19',
+    opponent: 'Opponent', board: 'Board', goal: 'Goal', territory: 'Territory', capWho: 'First to capture', botLevel: 'Bot level', color: 'Colour', random: 'Random',
+    handicap: 'Handicap', komiDefault: 'Default komi', clock: 'Clock', playBtn: 'Play', none: 'none', noKomi: 'not needed',
+    stonesN: n => `${n} ${n == 1 ? 'stone' : 'stones'}`, youBlack: 'you play Black', youWhite: 'you play White', colorRandom: 'random colour',
+    noClock: 'no clock', byoOnly: s => `${s} s per move`, clockFmt: (m, p, s) => `${m} min, ${p} x ${s} s`,
+    solvedOf: (a, b) => `Solved ${a} of ${b}`, solvedW: 'solved', startedW: 'started',
+    gamesWithBot: 'games with the bot', wins: 'won', tasksSolved: 'problems solved', approxRank: 'rough strength', rankByWeek: 'Strength by week',
+    chartEmpty: 'The chart appears once there is an estimate for at least two weeks.', vsBot: 'Versus the bot', level: 'Level', winsCol: 'Won', gamesCol: 'Games', noBotGames: 'No games with the bot yet.',
+    solvedCol: 'Solved', totalCol: 'Total', twoGamesN: n => `Two-player games: ${n}`,
+    rankBasis: (g, p) => `from ${g} ${g == 1 ? 'game' : 'games'} and ${p} ${p == 1 ? 'problem' : 'problems'}`,
+    stageTasks: 'Stage problems', stageBot: l => `Stage bot, ${l}`, winsOf: (w, n) => `${w} won of ${n}`, stageTasksBtn: 'Stage problems', stageBotBtn: 'Game with the bot', later: 'later, with lessons',
+    st0: 'Rules and capture', st0d: 'atari, capture, saving stones', st1: 'Capturing', st1d: 'chasing stones two moves and further', st2: 'Eyes', st2d: 'two eyes, living and killing in one move',
+    st3: 'Life and death', st3d: 'shapes in the corner and on the edge, answering the defence', st4: 'Reading', st4d: 'long lines, throw-ins, false eyes',
+    st5: 'Opening', st5d: 'corners, sides, framework, joseki', st6: 'Endgame', st6d: 'yose, counting, subtle moves', st7: 'Strong play', st7d: 'reading, judging a position, reviewing games',
+    collections: 'Collections', colX: 'Xuanxuan Qijing', colG: 'Guanzi Pu', colShort_x: 'Xuanxuan Qijing', colShort_g: 'Guanzi Pu',
+    colSrc_x: 'China, 1349. SGF by Jean-Pierre Vesinet, via u-go.net', colSrc_g: 'China, 17th century. Files from Flygo, via u-go.net',
+    colNote: 'Book problems have one solution line. A move the book does not give counts as wrong, even if it works too. Colours are swapped so that Black always starts.',
+    goal_any: 'Black to play', bookLine: n => `${n} black ${n == 1 ? 'move' : 'moves'} in the solution`, solvedBook: 'Same as the book.', wrongBook: 'The book plays elsewhere.',
+    autoNext: 'Go straight to the next problem', autoNextNote: 'a second after a correct solution', autoSoon: 'Next one in a second.',
+    look: 'Appearance', theme: 'Theme', themeAuto: 'System', themeLight: 'Light', themeDark: 'Dark', language: 'Language',
+    coords: 'Coordinates', lastMark: 'Last move mark', confirm: 'Confirm moves', confirmNote: 'on a phone a stone goes down on the second tap', sound: 'Stone sound',
+    gameCap: 'Game', scoring: 'Scoring', scoringNote: 'stones and territory, Chinese rules', byArea: 'by area', undoBot: 'Undo against the bot', about: 'About', author: 'Author',
+  },
+}
+
+function t(k, ...a) {
+  const v = (TX[LANG] && TX[LANG][k]) ?? TX.ru[k] ?? k
+  return typeof v == 'function' ? v(...a) : v
+}
