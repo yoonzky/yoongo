@@ -87,18 +87,11 @@ function openProblem(id) {
   const main = `<div class="goban" id="bv"></div>`
   const insp = `<div><div class="tcap"><span>${cap}</span><span class="num">${t('nOf', idx + 1, list.length)}</span></div><span class="prog"><i style="width:${(solvedIn / list.length * 100).toFixed(1)}%"></i></span></div>
     <div class="task"><h3>${isClassic(pr) ? t('goal_any') : goalText(pr.g)}</h3><small>${sub}</small></div>
-    <div id="pState"></div><div id="pTools"></div>
-    <label class="li autonext"><span class="tx">${t('autoNext')}</span><span class="sw"><input type="checkbox" id="pAuto" ${SES.settings.autoNext ? 'checked' : ''}><i></i></span></label>`
+    <div id="pState"></div><div id="pTools"></div>`
   const back = isClassic(pr) ? '#tasks/c' + pr.src : '#tasks/' + pr.l
   boardPage({sel: 2, back, backT: t('tasks'), title: problemTitle(pr), main, insp, crop: true})
-  P.view = new BoardView($('#bv'), {n: 19, b: P.b, crop: pr.c, marks: base.marks, turn: BLACK, labels: false, canPlay: p => P.state == 'move' && !P.busy && P.b[p] == EMPTY, onTap: p => problemMove(p)})
+  P.view = new BoardView($('#bv'), {n: 19, b: P.b, crop: fitCrop(pr.c), marks: base.marks, turn: BLACK, labels: true, canPlay: p => P.state == 'move' && !P.busy && P.b[p] == EMPTY, onTap: p => problemMove(p)})
   P.view.draw()
-  $('#pAuto').onchange = e => {
-    SES.settings.autoNext = e.target.checked
-    writeSes()
-    if (e.target.checked && P.state == 'solved') scheduleNext()
-    if (!e.target.checked) clearTimeout(autoTimer)
-  }
   renderPState()
 }
 
@@ -108,11 +101,25 @@ function renderPState() {
   const pr = P.pr
   if (P.state == 'solved') {
     const note = P.failed ? t('solvedAfter') : P.hinted ? t('solvedHint') : isClassic(pr) ? t('solvedBook') : t('solvedNote_' + pr.g)
-    const auto = SES.settings.autoNext ? ` <span class="sm">${t('autoSoon')}</span>` : ''
-    s.innerHTML = `<div class="tstate ok"><span><b>${t('correct')}</b> ${note}${auto}</span></div>`
-    tl.innerHTML = `<div class="acts2"><button type="button" class="btn" id="pNext">${t('nextTask')}</button><button type="button" class="btn plain" id="pAgain">${t('again2')}</button></div>`
+    s.innerHTML = `<div class="tstate ok"><span><b>${t('correct')}</b> ${note}</span></div>`
+    // автопереход виден только здесь, когда он и нужен
+    const auto = SES.settings.autoNext ? `<div class="autorow"><span>${t('autoOn')}</span><button type="button" class="link" id="pAutoOff">${t('autoStop')}</button></div>` : `<label class="autorow"><span>${t('autoRow')}</span><span class="sw"><input type="checkbox" id="pAuto"><i></i></span></label>`
+    tl.innerHTML = `<div class="acts2"><button type="button" class="btn" id="pNext">${t('nextTask')}</button></div>${auto}`
+    const on = $('#pAuto'), off = $('#pAutoOff')
+    if (on) on.onchange = () => {
+      SES.settings.autoNext = true
+      writeSes()
+      renderPState()
+      scheduleNext()
+    }
+    if (off) off.onclick = () => {
+      SES.settings.autoNext = false
+      writeSes()
+      clearTimeout(autoTimer)
+      renderPState()
+    }
   } else if (P.state == 'wrong') {
-    s.innerHTML = `<div class="tstate bad"><span><b>${t('wrong')}</b> ${isClassic(pr) ? t('wrongBook') : t('wrongNote')}</span></div>`
+    s.innerHTML = `<div class="tstate bad"><span><b>${t('wrong')}</b> ${isClassic(pr) ? t('wrongBook') : t('wrong_' + pr.g)}</span></div>`
     tl.innerHTML = `<div class="tools"><button type="button" class="tool" id="pHint">${ic('bulb')}${t('hint')}</button><button type="button" class="tool on" id="pAgain">${ic('redo')}${t('retry')}</button><button type="button" class="tool" id="pNext">${ic('next')}${t('nextShort')}</button></div>`
   } else {
     s.innerHTML = `<div class="tstate">${st(BLACK)}<span>${P.busy ? t('thinkingOpp') : P.moves.length ? t('goodContinue') : t('yourMove')}</span></div>`
@@ -143,7 +150,7 @@ function scheduleNext() {
   const pr = P.pr
   autoTimer = setTimeout(() => {
     if (P && P.pr == pr && P.state == 'solved' && SES.settings.autoNext) location.hash = '#p/' + nextProblem(pr).id
-  }, 1400)
+  }, 1000)
 }
 
 function pPlay(p, c) {
@@ -168,6 +175,7 @@ function markSolved() {
   const bar = $('.insp .prog i')
   if (bar) bar.style.width = (list.filter(p => SES.solved[p.id]).length / list.length * 100).toFixed(1) + '%'
   if (SES.settings.autoNext) scheduleNext()
+  P.view.o.hideMarks = true
 }
 
 async function problemMove(p) {

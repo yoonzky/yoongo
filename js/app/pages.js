@@ -14,16 +14,16 @@ function miniBoard(g) {
 function sidebar(sel) {
   const games = SES.games.filter(g => !g.over)
   return `<aside class="sb">${LOGO}
-    ${NAV.map(([i, k, h], n) => `<a href="${h}" class="${n === sel ? 'on' : ''}">${ic(i)}${t(k)}${n == 2 ? `<span class="cnt" id="sbCnt">${t('nOf', solvedCount(), totalProblems())}</span>` : ''}</a>`).join('')}
+    ${NAV.map(([i, k, h], n) => `<a href="${h}" title="${t(k)}" class="${n === sel ? 'on' : ''}">${ic(i)}${t(k)}${n == 2 ? `<span class="cnt" id="sbCnt">${t('nOf', solvedCount(), totalProblems())}</span>` : ''}</a>`).join('')}
     <div id="sbGames">${sideGames(games, sel)}</div>
     <div class="spacer"></div>
-    <a href="#settings" class="foot ${sel == 's' ? 'on' : ''}">${ic('gear')}${t('settings')}</a></aside>`
+    <a href="#settings" title="${t('settings')}" class="foot ${sel == 's' ? 'on' : ''}">${ic('gear')}${t('settings')}</a></aside>`
 }
 function sideGames(games, sel) {
   if (!games.length) return ''
   return `<div class="cap">${t('games')}</div>` + games.map(g => {
     const go = replay(g)
-    return `<a href="#g/${g.id}" class="gm ${sel == 'g' + g.id ? 'on' : ''}">${miniBoard(g)}<span>${gameTitle(g)}, ${t('size', g.n)}<small>${gameState(g, go)}</small></span></a>`
+    return `<a href="#g/${g.id}" title="${gameTitle(g)}, ${t('size', g.n)}" class="gm ${sel == 'g' + g.id ? 'on' : ''}">${miniBoard(g)}<span>${gameTitle(g)}, ${t('size', g.n)}<small>${gameState(g, go)}</small></span></a>`
   }).join('')
 }
 function renderSidebarGames() {
@@ -55,7 +55,7 @@ function pushedPage(sel, back, backT, title, body) {
 function boardPage(o) {
   const more = o.more ? `<button type="button" class="ibtn" id="navMore" aria-label="${t('more')}">${ic('more')}</button>` : ''
   root().innerHTML = isCol()
-    ? `<div class="app ins">${navb(o.back, o.backT, o.title, more)}<main class="bmain ${o.crop ? 'crop' : ''}">${o.main}</main><aside class="insp">${o.insp}</aside></div>`
+    ? `<div class="app ins ${o.cls || ''}">${navb(o.back, o.backT, o.title, more)}<main class="bmain ${o.crop ? 'crop' : ''}">${o.main}</main><aside class="insp">${o.insp}</aside></div>`
     : `<div class="app ins">${sidebar(o.sel)}<main class="bmain ${o.crop ? 'crop' : ''}">${o.main}</main><aside class="insp">${o.insp}</aside></div>`
 }
 
@@ -100,11 +100,11 @@ function pageToday() {
   const games = SES.games.filter(g => !g.over).sort((a, b) => b.upd - a.upd)
   const est = rankEstimate()
   const g = games[0]
-  const cont = g ? `<a class="cont" href="#g/${g.id}"><span class="mini">${miniBoard(g)}</span><span class="info"><b>${gameTitle(g)}, ${t('size', g.n)}</b><small>${gameSub(g)}</small><span class="t">${gameState(g, replay(g))}</span></span></a>` : `<p class="empty">${t('noGames')}</p>`
+  const cont = g ? `<a class="cont" href="#g/${g.id}"><span class="mini">${miniBoard(g)}</span><span class="info"><b>${gameTitle(g)}, ${t('size', g.n)}</b><small>${gameSub(g, true)}</small><span class="t">${gameState(g, replay(g))}</span></span></a>` : `<p class="empty">${t('noGames')}</p>`
   const gear = isCol() ? `<a class="ibtn" href="#settings" aria-label="${t('settings')}">${ic('gear')}</a>` : ''
   tabPage(0, 0, `<div class="phead"><div><h1 class="big">${t('today')}</h1><p class="sub">${dateStr()}</p></div>${gear}</div>
   <div class="today">
-    <div class="card tday"><a href="#p/${pr.id}" class="goban" aria-label="${t('daily')}">${goSVG(problemBoard(pr))}</a><div class="tx"><b class="h">${t('daily')}</b><span class="big2">${isClassic(pr) ? t('goal_any') : goalText(pr.g)}</span><small class="sm">${isClassic(pr) ? t('colShort_' + pr.src) + ', ' + pr.k : t('aboutKyu', PZ_KYU[pr.l])}</small><a class="btn soft a-btn" href="#p/${pr.id}" style="margin-top:8px;align-self:flex-start">${t('solve')}</a></div></div>
+    <div class="card tday"><a href="#p/${pr.id}" class="goban" aria-label="${t('daily')}">${goSVG({...problemBoard(pr), crop: tileCrop(pr)})}</a><div class="tx"><b class="h">${t('daily')}</b><span class="big2">${isClassic(pr) ? t('goal_any') : goalText(pr.g)}</span><small class="sm">${isClassic(pr) ? t('colShort_' + pr.src) + ', ' + pr.k : t('aboutKyu', PZ_KYU[pr.l])}</small><a class="btn soft a-btn" href="#p/${pr.id}" style="margin-top:8px;align-self:flex-start">${t('solve')}</a></div></div>
     <div class="card"><b class="h">${t('continue')}</b>${cont}</div>
     <div class="card"><b class="h">${t('yourRank')}</b><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="big2">${est == null ? t('noRank') : t('aboutKyu', est)}</span><small class="sm">${est == null ? '' : t('nextMark', nextMark(est))}</small></div>${lane(est)}${est == null ? `<small class="sm">${t('noRankHint')}</small>` : ''}</div>
     <div class="card"><b class="h">${t('newGame')}</b><div class="quick">${QUICK.map(([k], i) => `<button type="button" data-q="${i}">${t(k)}</button>`).join('')}</div></div>
@@ -202,7 +202,7 @@ function lvlChips(on) {
 function tile(p, i, cur) {
   const done = SES.solved[p.id]
   const cls = done ? 'done' : p == cur ? 'cur' : ''
-  const note = done ? t('solvedW') : SES.seen[p.id] ? t('startedW') : p.g ? t('goalShort_' + p.g) : ''
+  const note = done ? t('solvedW') : SES.seen[p.id] ? t('startedW') : ''
   return `<a href="#p/${p.id}" class="pz ${cls}"><div class="goban">${goSVG({...problemBoard(p), crop: tileCrop(p)})}</div><span class="n">${p.k || i + 1}<small>${note}</small></span></a>`
 }
 
@@ -229,10 +229,10 @@ function pageTasks(lv, page = 1) {
     const solvedLv = list.filter(p => SES.solved[p.id]).length
     const cur = list.find(p => !SES.solved[p.id])
     const part = list.slice((page - 1) * PAGE, page * PAGE)
-    const pager = pages > 1 ? `<div class="pager">${Array.from({length: pages}, (_, i) => `<a href="#tasks/c${col.src}/${i + 1}" class="${i + 1 == page ? 'on' : ''}">${i * PAGE + 1}</a>`).join('')}</div>` : ''
+    const pager = pages > 1 ? `<div class="pager">${Array.from({length: pages}, (_, i) => `<a href="#tasks/c${col.src}/${i + 1}" class="${i + 1 == page ? 'on' : ''}">${i * PAGE + 1}-${Math.min(list.length, (i + 1) * PAGE)}</a>`).join('')}</div>` : ''
     tabPage(2, 2, `${head}${lvlChips('c')}
     <div class="thead"><a class="link" href="#tasks/c">${t('collections')}</a><b class="colh">${t(col.key)}</b><span class="sm">${t('solvedOf', solvedLv, list.length)}</span><span class="prog"><i style="width:${(solvedLv / list.length * 100).toFixed(1)}%"></i></span></div>
-    ${pager}<div class="pgrid">${part.map((p, i) => tile(p, i, cur)).join('')}</div>${pager}`)
+    ${pager}<div class="pgrid">${part.map((p, i) => tile(p, i, cur)).join('')}</div>${page < pages ? `<a class="btn plain a-btn morebtn" href="#tasks/c${col.src}/${page + 1}">${t('nextPage', page * PAGE + 1, Math.min(list.length, (page + 1) * PAGE))}</a>` : ''}`)
   } else {
     lv = +lv
     const list = PROBLEMS.filter(p => p.l == lv)
@@ -241,19 +241,39 @@ function pageTasks(lv, page = 1) {
     const pages = Math.ceil(list.length / PAGE)
     page = Math.max(1, Math.min(pages, page))
     const part = list.slice((page - 1) * PAGE, page * PAGE)
-    const pager = pages > 1 ? `<div class="pager">${Array.from({length: pages}, (_, i) => `<a href="#tasks/${lv}/${i + 1}" class="${i + 1 == page ? 'on' : ''}">${i * PAGE + 1}</a>`).join('')}</div>` : ''
+    const pager = pages > 1 ? `<div class="pager">${Array.from({length: pages}, (_, i) => `<a href="#tasks/${lv}/${i + 1}" class="${i + 1 == page ? 'on' : ''}">${i * PAGE + 1}-${Math.min(list.length, (i + 1) * PAGE)}</a>`).join('')}</div>` : ''
     tabPage(2, 2, `${head}${lvlChips(lv)}
     <div class="thead"><span class="sm">${t('solvedOf', solvedLv, list.length)}</span><span class="prog"><i style="width:${(solvedLv / list.length * 100).toFixed(1)}%"></i></span></div>
-    ${pager}<div class="pgrid">${part.map((p, i) => tile(p, (page - 1) * PAGE + i, cur)).join('')}</div>${pager}`)
+    ${pager}<div class="pgrid">${part.map((p, i) => tile(p, (page - 1) * PAGE + i, cur)).join('')}</div>${page < pages ? `<a class="btn plain a-btn morebtn" href="#tasks/${lv}/${page + 1}">${t('nextPage', page * PAGE + 1, Math.min(list.length, (page + 1) * PAGE))}</a>` : ''}`)
   }
   $$('.lvls button').forEach(b => b.onclick = () => (location.hash = '#tasks/' + b.dataset.l))
 }
 
-// плитка задачи квадратная: вырез дополняется до квадрата
+// плитка задачи квадратная: рамка камней плюс линия, не меньше 6 линий
 function tileCrop(p) {
-  let [x0, y0, x1, y1] = p.c
-  while (x1 - x0 < y1 - y0) x1 < 18 ? x1++ : x0--
-  while (y1 - y0 < x1 - x0) y1 < 18 ? y1++ : y0--
+  let x0 = 18, y0 = 18, x1 = 0, y1 = 0
+  for (const v of [...p.b, ...p.w]) {
+    const x = v.charCodeAt(0) - 97, y = v.charCodeAt(1) - 97
+    x0 = Math.min(x0, x)
+    y0 = Math.min(y0, y)
+    x1 = Math.max(x1, x)
+    y1 = Math.max(y1, y)
+  }
+  x0 = x0 <= 1 ? 0 : x0 - 1
+  y0 = y0 <= 1 ? 0 : y0 - 1
+  x1 = x1 >= 17 ? 18 : x1 + 1
+  y1 = y1 >= 17 ? 18 : y1 + 1
+  const side = Math.max(5, x1 - x0, y1 - y0)
+  while (x1 - x0 < side) x0 > 0 && (x1 == 18 || x0 > 18 - x1) ? x0-- : x1++
+  while (y1 - y0 < side) y0 > 0 && (y1 == 18 || y0 > 18 - y1) ? y0-- : y1++
+  return [x0, y0, x1, y1]
+}
+
+// вырез задачи не уже 0,6 по любой стороне: узкую полосу расширяем к центру
+function fitCrop(c) {
+  let [x0, y0, x1, y1] = c
+  while ((x1 - x0 + 1) < .6 * (y1 - y0 + 1)) x0 > 18 - x1 ? x0-- : x1++
+  while ((y1 - y0 + 1) < .6 * (x1 - x0 + 1)) y0 > 18 - y1 ? y0-- : y1++
   return [x0, y0, x1, y1]
 }
 
@@ -289,7 +309,7 @@ function pageStats() {
   const rowsPz = [0, 1, 2, 3].map(l => `<div class="row"><span>${t('pl' + l)}</span><span class="num">${solvedCount(l)}</span><span class="num">${PROBLEMS.filter(p => p.l == l).length}</span></div>`).join('')
   const twoGames = LOG.filter(e => e.t == 'g' && e.opp == 'two').length
   pushedPage(4, '#path', t('path'), t('stats'), `
-  <div class="tiles"><div class="tile2"><b class="num">${games.length}</b><span>${t('gamesWithBot')}</span></div><div class="tile2"><b class="num">${games.length ? Math.round(wins / games.length * 100) + '%' : '0'}</b><span>${t('wins')}</span></div><div class="tile2"><b class="num">${solvedCount()}</b><span>${t('tasksSolved')}</span></div><div class="tile2"><b class="num">${est == null ? '?' : t('kyuShort', est)}</b><span>${t('approxRank')}</span></div></div>
+  <div class="tiles"><div class="tile2"><b class="num">${games.length}</b><span>${t('gamesWithBotN', games.length)}</span></div><div class="tile2"><b class="num">${games.length ? Math.round(wins / games.length * 100) + '%' : '0'}</b><span>${t('wins')}</span></div><div class="tile2"><b class="num">${solvedCount()}</b><span>${t('tasksSolvedN', solvedCount())}</span></div><div class="tile2"><b class="num">${est == null ? t('noneShort') : t('kyuShort', est)}</b><span>${t('approxRank')}</span></div></div>
   <div class="card chart"><b class="h">${t('rankByWeek')}</b>${chart || `<p class="empty" style="margin-top:8px">${t('chartEmpty')}</p>`}</div>
   <div class="two"><div class="card tbl"><b class="h">${t('vsBot')}</b><div class="row hd"><span>${t('level')}</span><span>${t('winsCol')}</span><span>${t('gamesCol')}</span></div>${rowsBot || `<p class="empty" style="padding-top:8px">${t('noBotGames')}</p>`}</div>
     <div class="card tbl"><b class="h">${t('tasks')}</b><div class="row hd"><span>${t('level')}</span><span>${t('solvedCol')}</span><span>${t('totalCol')}</span></div>${rowsPz}</div></div>
@@ -326,7 +346,7 @@ function pagePath() {
   const pz = LOG.filter(e => e.t == 'p').length
   const statsLink = isCol() ? `<a class="link" href="#stats">${t('stats')}</a>` : ''
   tabPage(3, 3, `<div class="phead"><h1 class="big">${t('path')}</h1>${statsLink}</div>
-  <div class="rankhead"><span class="big2">${est == null ? t('noRank') : t('aboutKyu', est)}</span><span class="sm">${est == null ? t('noRankHint') : t('rankBasis', games, pz)}</span></div>
+  <div class="rankhead ${est == null ? 'none' : ''}"><span class="big2">${est == null ? t('noRank') : t('aboutKyu', est)}</span><span class="sm">${est == null ? t('noRankHint') : t('rankBasis', games, pz)}</span></div>
   <div class="ladder">${STAGES.map((s, i) => {
     const cls = i < cur ? 'past' : i == cur ? 'cur' : 'fut'
     const mark = i < cur ? st(BLACK) : i == cur ? '<span class="st b cur"></span>' : '<span class="p"></span>'

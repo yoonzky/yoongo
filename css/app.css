@@ -1,7 +1,7 @@
 /* Copyright (C) 2026 yoonzky. AGPL-3.0, see LICENSE */
 /* дерево и камни */
 :root{--wood:#e2cfa8;--wood-line:#8f7a57;--wood-star:#6e5c3e;--wood-lab:#8a7b60;--sb:#2a2b2e;--sb-hi:#5c616a;--sw-hi:#fbfbfc;--sw-lo:#d6d8dc;--stone-sh:.22;--last:#c4463e;--edge:rgba(40,50,70,.18);--side:#e3e6eb}
-:root[data-theme=dark]{--wood:#4a3f30;--wood-line:#7d6c52;--wood-star:#9a8768;--wood-lab:#8f8270;--sb:#121315;--sb-hi:#4a4e56;--sw-hi:#e6e8ec;--sw-lo:#a9adb4;--stone-sh:.45;--last:#e08a6c;--edge:rgba(255,255,255,.12);--side:#18191c}
+:root[data-theme=dark]{--edge:rgba(255,255,255,.22);--wood:#4a3f30;--wood-line:#7d6c52;--wood-star:#9a8768;--wood-lab:#8f8270;--sb:#121315;--sb-hi:#4a4e56;--sw-hi:#e6e8ec;--sw-lo:#a9adb4;--stone-sh:.45;--last:#e08a6c;--side:#18191c}
 
 a.link{text-decoration:none}
 .logo{font:700 29px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:-.045em;color:var(--accent)}
@@ -39,13 +39,13 @@ a.link{text-decoration:none}
 .sb .foot{margin-top:auto}
 .sb .spacer{flex:1;min-height:12px}
 .page{overflow:auto;padding:30px 36px 40px}
-.page .in{max-width:900px}
+.page .in{max-width:960px;margin:0 auto}
 h1.big{font:700 34px/1.1 var(--font-disp);letter-spacing:-.026em}
 .sub{font-size:15px;color:var(--text-2);margin-top:4px}
 .phead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .bmain{display:grid;place-items:center;padding:24px;overflow:hidden;position:relative}
 .bmain .goban{width:min(calc(100dvh - 48px),100%)}
-.bmain.crop .goban{width:min(calc((100dvh - 48px)*var(--ar,1)),100%)}
+.bmain.crop .goban{width:min(calc((100dvh - 48px)*var(--ar,1)),100%,calc(var(--span,8)*64px))}
 .insp{border-left:.5px solid var(--sep);padding:22px 16px;display:flex;flex-direction:column;gap:14px;overflow:auto;scrollbar-width:none}
 .insp .ih{display:flex;align-items:flex-start;gap:6px}
 .insp h2{font:650 20px/1.2 var(--font-disp);letter-spacing:-.016em;padding:0 4px;flex:1;min-width:0}
@@ -95,13 +95,13 @@ h1.big{font:700 34px/1.1 var(--font-disp);letter-spacing:-.026em}
 .acts2{display:flex;flex-direction:column;gap:8px}
 
 /* сегодня */
-.today{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;margin-top:22px}
+.today{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;margin-top:22px}
 .today .card{display:flex;flex-direction:column;gap:12px}
 .today .tday{grid-row:span 2;flex-direction:row;gap:18px;align-items:flex-start}
 .a-btn{display:inline-grid;place-items:center;text-decoration:none}
-.today .tday .goban{width:300px;flex:none;box-shadow:none;cursor:pointer}
+.today .tday .goban{width:240px;flex:none;box-shadow:none;cursor:pointer}
 .today .tday .tx{display:flex;flex-direction:column;gap:8px}
-.cont{color:inherit;text-decoration:none;position:relative;display:flex;gap:16px;align-items:center;width:100%;text-align:left;border-radius:12px;transition:background-color .12s}
+.cont{color:inherit;text-decoration:none;position:relative;display:flex;gap:16px;align-items:center;width:calc(100% + 16px);padding:8px;margin:-8px;text-align:left;border-radius:12px;transition:background-color .12s}
 .cont .mini{width:96px;flex:none}
 .cont .mini .goban{box-shadow:none;border-radius:8px}
 .cont .info{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
@@ -122,7 +122,7 @@ h1.big{font:700 34px/1.1 var(--font-disp);letter-spacing:-.026em}
 .empty{font-size:14px;color:var(--text-2);line-height:1.4}
 
 /* новая партия */
-.ng{display:grid;grid-template-columns:300px minmax(0,1fr);gap:32px;margin-top:24px;align-items:start}
+.ng{display:grid;grid-template-columns:minmax(180px,300px) minmax(0,1fr);gap:32px;margin-top:24px;align-items:start}
 .ng .goban{width:100%}
 .ng .prev small{display:block;text-align:center;margin-top:10px}
 .form{display:flex;flex-direction:column;gap:12px}
@@ -200,13 +200,13 @@ button.li:active{background:var(--row-press)}
 .rankhead .big2{font-size:28px}
 
 /* статистика */
-.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:22px}
 .tile2{background:var(--surface);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow-1)}
 .tile2 b{display:block;font:650 26px/1.1 var(--font-disp);letter-spacing:-.02em}
 .tile2 span{font-size:13px;color:var(--text-2)}
 .chart{margin-top:16px}
 .chart svg{width:100%;height:180px;margin-top:8px}
-.two{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px}
+.two{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px;align-items:start}
 .tbl .row{display:grid;grid-template-columns:1fr 70px 90px;gap:8px;padding:9px 0;border-top:.5px solid var(--sep);font-size:14px;align-items:center}
 .tbl .row:first-of-type{border:0}
 .tbl .row span:not(:first-child){text-align:right;color:var(--text-2)}
@@ -257,7 +257,7 @@ body.col .two{grid-template-columns:1fr}
 body.col .stg.cur .card{grid-template-columns:1fr}
 body.col .stg.cur .card .acts{grid-column:auto;flex-direction:column}
 body.col .stg.cur .card .acts .btn{width:100%}
-body.col .set .li{flex-wrap:wrap}
+body.col .set .li:has(.seg){flex-wrap:wrap}
 body.col .set .li .seg{width:100%;margin-left:0}
 body.col .result .r-time{font-size:34px}
 body.col .result .rows{display:none}
@@ -266,7 +266,6 @@ body.col .acts2{flex-direction:row}
 body.col .acts2 .btn{flex:1;padding:0 12px}
 
 /* меню у кнопки */
-.menu{position:fixed;z-index:45;min-width:220px;padding:6px;border-radius:14px;background:var(--raise);box-shadow:var(--shadow-2)}
 .menu button.on{color:var(--accent-ink);font-weight:500}
 .menu button.danger{color:var(--red)}
 .menu button .ck{margin-left:auto;width:18px;height:18px;color:var(--accent)}
@@ -308,7 +307,10 @@ body.col .minimap.hidden{display:none}
 .colc b{font-size:17px;font-weight:600;letter-spacing:-.01em}
 .colnote{margin-top:16px;max-width:620px;line-height:1.45}
 .colh{font-size:15px;font-weight:600}
-.pager{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.pager{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;margin-top:16px;scrollbar-width:none}
+.pager::-webkit-scrollbar{display:none}
+.pager a{flex:none}
+.morebtn{margin-top:20px;width:100%}
 .pager a{min-width:44px;height:30px;padding:0 10px;border-radius:15px;display:grid;place-items:center;font-size:13px;color:var(--text-2);background:var(--fill);text-decoration:none}
 .pager a.on{background:var(--tint-2);color:var(--accent-ink);font-weight:500}
 .insp .autonext{background:var(--surface);border-radius:12px;min-height:44px;font-size:14px;cursor:pointer;margin-top:auto}
@@ -316,3 +318,40 @@ body.col .insp .autonext{margin-top:4px}
 
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .goban:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* итог, подсчёт, автопереход */
+.result+.acts2{margin-top:12px}
+.result .big2{margin-top:4px}
+.insp.scoring .players,.insp.scoring .reccap,.insp.scoring .recwrap{display:none}
+.autorow{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;padding:0 4px;font-size:14px;color:var(--text-2);cursor:pointer}
+.autorow .sw{transform:scale(.85);transform-origin:right center}
+.set .li .tx{flex:1}
+.rankhead.none .big2{font:500 17px/1.3 var(--font);color:var(--text-2);letter-spacing:0}
+.today .tday .tx{min-width:0}
+
+/* средняя ширина: колонка разделов только значками */
+@media (min-width:720px) and (max-width:1099px){
+  .app{grid-template-columns:64px minmax(0,1fr)}
+  .app.ins{grid-template-columns:64px minmax(0,1fr) 280px}
+  .sb{padding:18px 8px;align-items:stretch}
+  .sb .logo{font-size:0;margin:0 0 16px;text-align:center}
+  .sb .logo::after{content:'go';font-size:22px;color:var(--accent)}
+  .sb a{font-size:0;justify-content:center;padding:0;gap:0}
+  .sb a .icon{width:22px;height:22px}
+  .sb a .cnt,.sb .cap,.sb a.gm span{display:none}
+  .sb a.gm .goban{width:30px}
+  .page{padding:26px 24px 36px}
+  .bmain{padding:16px}
+  .today .tday{flex-direction:column}
+  .today .tday .goban{width:100%;max-width:320px}
+}
+
+/* телефон: листание сборника строкой, лоток партии у нижнего края */
+body.col .pager{flex-wrap:nowrap;overflow-x:auto;margin:16px -16px 0;padding:0 16px;scrollbar-width:none}
+body.col .pager::-webkit-scrollbar{display:none}
+body.col .pager a{flex:none}
+body.col .thead{flex-wrap:wrap;gap:8px 16px}
+body.col .thead .prog{flex-basis:100%;max-width:none}
+body.col .app.ins.game{display:flex;flex-direction:column;min-height:100dvh}
+body.col .app.ins.game .insp{margin-top:auto}
+body.col .app.ins.game .bmain{flex:1;display:grid;align-content:center}

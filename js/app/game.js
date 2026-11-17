@@ -29,8 +29,8 @@ function gameTitle(g) {
   if (g.goal == 'cap') return t('capTitle', g.capN)
   return g.opp == 'bot' ? t('withBot') : t('twoPlayers')
 }
-function gameSub(g) {
-  const parts = [t('size', g.n)]
+function gameSub(g, noSize) {
+  const parts = noSize ? [] : [t('size', g.n)]
   if (g.opp == 'bot') parts.push(t('lv' + g.level).toLowerCase())
   if (g.hcap >= 2) parts.push(t('hcapN', g.hcap))
   if (g.goal != 'cap') parts.push(t('komiN', fmtNum(g.komi)))
@@ -71,7 +71,7 @@ function renderGame() {
     <div class="players" id="gPl"></div>
     <div id="gPanel"></div>
     <div class="icap reccap">${t('record')}</div><div class="recwrap" id="gRec"></div>`
-  boardPage({sel: 'g' + rec.id, back: '#play', backT: t('games'), title: gameTitle(rec) + ', ' + t('size', rec.n), main, insp, more: true})
+  boardPage({sel: 'g' + rec.id, back: '#play', backT: t('games'), title: gameTitle(rec) + ', ' + t('size', rec.n), main, insp, more: true, cls: 'game'})
   G.view = new BoardView($('#bv'), {n: rec.n, b: go.b, last: go.last, turn: go.turn, labels: !isCol(), canPlay: p => humanTurn() && G.go.b[p] == EMPTY, onTap: p => humanPlay(p), onPick: p => scorePick(p)})
   G.view.draw()
   if (zoomable) setupZoom()
@@ -111,16 +111,26 @@ function clockText(c) {
 function renderPanel() {
   const {rec, go} = G
   const el = $('#gPanel')
+  // при подсчёте в инспекторе только счёт, как в макете
+  const scoring = rec.phase == 'score' && !rec.over
+  const insp = $('.insp')
+  if (insp) insp.classList.toggle('scoring', scoring)
+  const h2 = $('.insp .ih h2')
+  if (h2) h2.innerHTML = scoring ? `${t('scoringTitle')}<small>${t('bothPassed', rec.moves.length)}</small>` : `${gameTitle(rec)}<small>${gameSub(rec)}</small>`
   if (rec.over) {
     const o = rec.over
     let head, big, rows = ''
     if (rec.opp == 'bot') head = o.winner == rec.human ? t('youWon') : t('youLost')
     else head = o.winner == BLACK ? t('blackWon') : t('whiteWon')
     if (o.reason == 'score') {
-      big = '+' + fmtNum(o.margin)
+      big = `<span class="r-time num">${o.winner == BLACK ? t('blackShort') : t('whiteShort')}+${fmtNum(o.margin)}</span>`
       rows = `<div class="rows"><div class="row"><span>${t('blackArea')}</span><b class="num">${o.b}</b></div><div class="row"><span>${t('whiteArea')}</span><b class="num">${o.w}</b></div><div class="row"><span>${t('komi')}</span><b class="num">${fmtNum(rec.komi)}</b></div></div>`
-    } else big = t('by_' + o.reason)
-    el.innerHTML = `<div class="result"><span class="r-head">${head}</span><span class="r-time num">${big}</span>${rows}</div><div class="acts2"><button type="button" class="btn" id="gAgain">${t('again')}</button><button type="button" class="btn plain" id="gHome">${t('toNew')}</button></div>`
+    } else {
+      let why = t('end_' + o.reason, rec.capN)
+      if (o.reason == 'resign' && rec.opp == 'bot') why = o.winner == rec.human ? t('end_botResigned') : t('end_youResigned')
+      big = `<span class="big2">${why}</span>`
+    }
+    el.innerHTML = `<div class="result"><span class="r-head">${head}</span>${big}${rows}</div><div class="acts2"><button type="button" class="btn" id="gAgain">${t('again')}</button><button type="button" class="btn plain" id="gHome">${t('toNew')}</button></div>`
     $('#gAgain').onclick = () => {
       const r = newGame({...SES.settings.ng, opp: rec.opp, n: rec.n, goal: rec.goal, capN: rec.capN, level: rec.level, color: rec.human == WHITE ? 'w' : 'b', hcap: rec.hcap, komi: rec.komi, clock: CLOCKS.findIndex(c => JSON.stringify(c) == JSON.stringify(rec.clock))})
       location.hash = '#g/' + r.id

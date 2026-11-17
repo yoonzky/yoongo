@@ -32,7 +32,7 @@ function goSVG(o) {
   }
   for (const [x, y] of stars(n)) if (x >= x0 && x <= x1 && y >= y0 && y <= y1) s += `<circle cx="${x}" cy="${y}" r="${n > 13 ? .1 : .09}" style="fill:var(--wood-star)"/>`
   if (o.labels) {
-    const lab = (x, y, t) => `<text x="${x}" y="${y + .1}" font-size=".28" text-anchor="middle" style="fill:var(--wood-lab)" font-family="system-ui">${t}</text>`
+    const lab = (x, y, t) => `<text x="${x}" y="${y + .1}" font-size="${o.fs || .28}" text-anchor="middle" style="fill:var(--wood-lab)" font-family="system-ui">${t}</text>`
     for (let i = x0; i <= x1; i++) {
       if (y0 == 0) s += lab(i, -.6, COLS[i])
       if (y1 == n - 1) s += lab(i, n - 1 + .6, COLS[i])
@@ -57,7 +57,7 @@ function goSVG(o) {
     const [gx, gy] = xy(n, o.ghost)
     s += stone(gx, gy, o.ghostC || BLACK, .45, 'ghost')
   }
-  const sq = (x, y, c, op = 1) => `<rect x="${x - .13}" y="${y - .13}" width=".26" height=".26" rx=".05" style="fill:var(${c == BLACK ? '--sb' : '--sw-hi'});stroke:var(${c == BLACK ? '--sb' : '--wood-line'})" stroke-width=".02" opacity="${op}"/>`
+  const sq = (x, y, c, op = 1) => `<rect x="${x - .13}" y="${y - .13}" width=".26" height=".26" rx=".05" style="fill:var(${c == BLACK ? '--sb' : '--sw-hi'});stroke:var(${c == BLACK ? '--sw-lo' : '--wood-line'})" stroke-width="${c == BLACK ? .03 : .02}" opacity="${op}"/>`
   if (o.terr) {
     for (let p = 0; p < o.terr.length; p++) {
       const c = o.terr[p]
@@ -75,11 +75,13 @@ function goSVG(o) {
       const c = v > 0 ? BLACK : WHITE
       if (b[p] == c) continue
       const [x, y] = xy(n, p)
-      s += sq(x, y, c, Math.min(1, Math.abs(v) * 1.1))
+      s += sq(x, y, c, Math.max(.6, Math.min(1, Math.abs(v) * 1.1)))
     }
   }
-  if (o.marks) {
+  if (o.marks && !o.hideMarks) {
     for (const p of o.marks) {
+      // снятый камень метку не оставляет
+      if (b[p] != BLACK && b[p] != WHITE) continue
       const [x, y] = xy(n, p)
       const c = b[p] == BLACK ? '--sw-hi' : '--sb'
       s += `<path d="M${x} ${y - .2}L${x + .19} ${y + .13}H${x - .19}Z" fill="none" style="stroke:var(${c})" stroke-width=".06" stroke-linejoin="round"/>`
@@ -200,12 +202,16 @@ class BoardView {
     const w = this.el.clientWidth || 600
     const span = o.crop ? o.crop[2] - o.crop[0] + 1 : o.n
     const labels = o.labels && SES.settings.coords && w / (span + 2) >= 20
+    // подписи около 12 px на любой доске: размер в единицах доски из пикселей на пункт
+    const unit = w / (span + (labels ? 1.9 : 1.24))
+    const fs = Math.max(.18, Math.min(.34, 12.5 / unit))
     // анимация камня только при первой отрисовке после хода, иначе наведение её повторяет
     const pop = o.pop
     o.pop = null
-    this.el.innerHTML = goSVG({...o, pop, ghost: ghost == null ? null : ghost, ghostC: o.turn, labels, last: SES.settings.lastMark ? o.last : null})
+    this.el.innerHTML = goSVG({...o, pop, fs, ghost: ghost == null ? null : ghost, ghostC: o.turn, labels, last: SES.settings.lastMark ? o.last : null})
     this.el.setAttribute('aria-label', t('boardLabel', o.n))
     this.el.style.setProperty('--ar', o.crop ? ((o.crop[2] - o.crop[0] + 1.3) / (o.crop[3] - o.crop[1] + 1.3)).toFixed(3) : 1)
+    this.el.style.setProperty('--span', span + 1.3)
   }
 }
 
