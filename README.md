@@ -1,35 +1,73 @@
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/logo-dark.png"><img src=".github/logo-light.png" height="72" alt="Yoongo"></picture></p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/logo-dark.png"><img src=".github/logo-light.png" height="92" alt="Yoongo"></picture></p>
 
 <p align="center">Go in the browser.<br>No accounts, no build step.</p>
 
-<p align="center"><a href="https://yoonzky.github.io/yoongo/"><b>Play</b></a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#features">Features</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#how-it-works">How it works</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#license">License</a></p>
+<p align="center"><a href="https://yoonzky.github.io/yoongo/"><b>Play</b></a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#problems">Problems</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#keyboard">Keyboard</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#license">License</a></p>
 
 <p align="center"><img src=".github/preview.png" alt="Yoongo on a desktop and a phone"></p>
+
+## Problems
+
+![A problem, the classic collections, a book problem and the path on a phone](.github/problems.png)
+
+| Set | Problems | What is inside |
+|---|---|---|
+| Beginner | 160 | capture in one move, saving stones in atari |
+| Easy | 228 | chasing stones, living and killing in one move |
+| Medium | 234 | life and death in the corner and on the edge |
+| Hard | 154 | longer life and death lines |
+| Xuanxuan Qijing | 333 | classic collection, China, 1349 |
+| Guanzi Pu | 1467 | classic collection, China, 17th century |
+
+The four levels are generated. Each problem has exactly one correct first move, checked by a life and death solver, and the opponent answers with the most stubborn defence. Classic problems follow the solution line from the book.
 
 ## Features
 
 - Play the bot at four levels or a friend on one screen, on 7x7, 9x9, 13x13 and 19x19.
-- Territory or capture go (first to take 1, 3 or 5 stones), handicap, komi, a clock with byo-yomi.
-- Generated problems in four levels: capture, saving stones, life and death. Each has one correct first move, checked by a solver, and the opponent answers with the most stubborn defence.
-- Two classic collections, Xuanxuan Qijing and Guanzi Pu, with the solution lines from the books.
-- Optional jump to the next problem after a correct solution.
-- Path: a rough strength estimate in kyu from games and first tries at problems.
-- Russian and English, light and dark theme, a phone layout with a zoomed big board.
-- Keyboard: arrows move over the board, Enter places a stone, Z undoes.
+- Territory or capture go: first to take 1, 3 or 5 stones wins.
+- Handicap, komi and a clock with byo-yomi.
+- Area scoring, positional superko. After two passes the bot marks dead groups, a tap on a group changes that.
+- Up to eight unfinished games, undo, a rough estimate of the position, SGF export.
+- Hints, and an optional jump to the next problem after a correct solution.
+- Path: a rough strength in kyu from games against the bot and first tries at problems.
+- Light and dark themes, Russian and English.
+- On a phone 13x13 and 19x19 open magnified, with a minimap.
 
-## Rules
+## Keyboard
 
-Area scoring (Chinese), komi 7.5, positional superko, no suicide. After two passes the bot marks dead groups, a tap on a group changes that, then the score is counted.
+| Action | Keys |
+|---|---|
+| Move over the board | arrow keys |
+| Place a stone | `Enter` or `Space` |
+| Undo | `Z` |
 
-## How it works
+## Structure
 
-- `js/engine/` has no DOM and runs in a worker: rules with Zobrist hashing, an MCTS bot with RAVE and light playouts on a board with pseudo-liberties, a life and death solver (Benson for unconditional life, iterative deepening, transposition table).
-- `js/app/` is the interface: i18n, storage, SVG board, pages, game, problems.
-- `data/problems.js` holds the generated problems, `data/classics.js` the classic collections.
-- Everything is kept in localStorage: settings, up to eight unfinished games, solved problems and a log for statistics.
+```
+index.html     markup and script order
+css/           tokens, base, app
+js/engine/     rules, bot, ld, api, worker
+js/app/        i18n, store, ui, board, pages, game, problem, main
+data/          generated problems, classic collections
+icons/         site and app icons
+```
 
-The worker does not start from `file://`, so serve the folder with any static server, for example `python3 -m http.server`.
+The engine has no DOM and runs in a worker. `rules.js` keeps the board with a border and checks superko by Zobrist hash. `bot.js` is Monte Carlo tree search with RAVE and light playouts on a board with pseudo-liberties; the levels differ by the number of playouts. `ld.js` solves life and death on a limited area: Benson's algorithm for unconditional life, iterative deepening, a transposition table.
+
+Games, settings and solved problems are kept in `localStorage`.
+
+## Running locally
+
+```
+python3 -m http.server 8000
+```
+
+Then open `http://localhost:8000`. Opening `index.html` directly also works; the bot then thinks on the main thread.
 
 ## License
 
-Code and generated problems: [AGPL-3.0](LICENSE), Copyright (C) 2026 yoonzky. The classic collections come from third parties, see [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md).
+Copyright (C) 2026 yoonzky. GNU Affero General Public License v3.0, see [LICENSE](LICENSE).
+
+Anyone who copies or changes the code, including running a changed version as a website, has to keep this notice and share the source under the same license.
+
+The classic collections come from third parties and are not covered by this license, see [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md).

@@ -3,6 +3,7 @@
 :root{--wood:#e2cfa8;--wood-line:#8f7a57;--wood-star:#6e5c3e;--wood-lab:#8a7b60;--sb:#2a2b2e;--sb-hi:#5c616a;--sw-hi:#fbfbfc;--sw-lo:#d6d8dc;--stone-sh:.22;--last:#c4463e;--edge:rgba(40,50,70,.18);--side:#e3e6eb}
 :root[data-theme=dark]{--wood:#4a3f30;--wood-line:#7d6c52;--wood-star:#9a8768;--wood-lab:#8f8270;--sb:#121315;--sb-hi:#4a4e56;--sw-hi:#e6e8ec;--sw-lo:#a9adb4;--stone-sh:.45;--last:#e08a6c;--edge:rgba(255,255,255,.12);--side:#18191c}
 
+a.link{text-decoration:none}
 .logo{font:700 29px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:-.045em;color:var(--accent)}
 .logo .lt{color:var(--text)}
 .goban{border-radius:14px;overflow:hidden;box-shadow:var(--shadow-1);background:var(--wood)}
