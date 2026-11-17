@@ -194,8 +194,10 @@ function clockLabel(i) {
 }
 
 const PAGE = 60
+// сборники первыми, потом свои уровни
 function lvlChips(on) {
-  return `<div class="lvls">${[0, 1, 2, 3].map(l => `<button type="button" data-l="${l}" class="${String(l) == String(on) ? 'on' : ''}">${t('pl' + l)}<small>${t('kyuShort', PZ_KYU[l])}</small></button>`).join('')}<button type="button" data-l="c" class="${String(on)[0] == 'c' ? 'on' : ''}">${t('collections')}<small>${CLASSICS.length}</small></button></div>`
+  const col = `<button type="button" data-l="c" class="${String(on)[0] == 'c' ? 'on' : ''}">${t('collections')}<small>${CLASSICS.length}</small></button>`
+  return `<div class="lvls">${col}${[0, 1, 2, 3].map(l => `<button type="button" data-l="${l}" class="${String(l) == String(on) ? 'on' : ''}">${t('pl' + l)}<small>${t('kyuShort', PZ_KYU[l])}</small></button>`).join('')}</div>`
 }
 function tile(p, i, cur) {
   const done = SES.solved[p.id]
@@ -207,7 +209,7 @@ function tile(p, i, cur) {
 function pageTasks(lv, page = 1) {
   if (lv == null) {
     const last = SES.lastPz && findProblem(SES.lastPz)
-    lv = last ? (isClassic(last) ? 'c' + last.src : last.l) : 0
+    lv = last ? (isClassic(last) ? 'c' + last.src : last.l) : 'c'
   }
   const head = `<h1 class="big">${t('tasks')}</h1><p class="sub">${t('solvedOf', solvedCount(), totalProblems())}</p>`
   if (lv == 'c') {

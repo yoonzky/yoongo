@@ -12,14 +12,14 @@
 
 | Set | Problems | What is inside |
 |---|---|---|
+| Xuanxuan Qijing | 333 | classic collection, China, 1349 |
+| Guanzi Pu | 1467 | classic collection, China, 17th century |
 | Beginner | 160 | capture in one move, saving stones in atari |
 | Easy | 228 | chasing stones, living and killing in one move |
 | Medium | 234 | life and death in the corner and on the edge |
 | Hard | 154 | longer life and death lines |
-| Xuanxuan Qijing | 333 | classic collection, China, 1349 |
-| Guanzi Pu | 1467 | classic collection, China, 17th century |
 
-The four levels are generated. Each problem has exactly one correct first move, checked by a life and death solver, and the opponent answers with the most stubborn defence. Classic problems follow the solution line from the book.
+Classic problems follow the solution line from the book. The four levels are generated. Each problem has exactly one correct first move, checked by a life and death solver, and the opponent answers with the most stubborn defence.
 
 ## Features
 
