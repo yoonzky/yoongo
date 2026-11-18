@@ -3,7 +3,7 @@
 'use strict'
 
 const LS_SES = 'yoongo-ses', LS_LOG = 'yoongo-log'
-const MAX_GAMES = 8
+const MAX_GAMES = 8, MAX_DONE = 40
 
 const SYS_LANG = (() => {
   try {
@@ -17,7 +17,7 @@ const SYS_LANG = (() => {
 const DEF_NEW = {opp: 'bot', n: 9, goal: 'area', capN: 3, level: 1, color: 'b', hcap: 0, komi: null, clock: 0}
 const DEF_SETTINGS = {theme: 'auto', lang: SYS_LANG, coords: true, lastMark: true, confirm: true, sound: false, komi: 7.5, undo: true, autoNext: false, ng: DEF_NEW}
 
-let SES = {settings: {...DEF_SETTINGS}, games: [], solved: {}, seen: {}}
+let SES = {settings: {...DEF_SETTINGS}, games: [], done: [], solved: {}, seen: {}}
 let LOG = []
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
@@ -56,6 +56,7 @@ function loadStore() {
     if (Array.isArray(l)) LOG = l
   } catch (e) {}
   SES.games = SES.games.filter(g => g && g.id && Array.isArray(g.moves))
+  SES.done = (Array.isArray(SES.done) ? SES.done : []).filter(g => g && g.id && Array.isArray(g.moves) && g.over)
 }
 
 // уровни бота и задач: слово и примерная сила; кю бота даны по 9 на 9
@@ -67,7 +68,8 @@ function rankEstimate(log = LOG) {
   const ests = []
   const byLv = [0, 1, 2, 3].map(() => ({w: 0, n: 0}))
   for (const e of log) {
-    if (e.t != 'g' || e.opp != 'bot' || e.win == null || e.hcap || e.goal == 'cap') continue
+    // кю бота измерены на 9 на 9, другие доски в оценку не идут
+    if (e.t != 'g' || e.opp != 'bot' || e.win == null || e.hcap || e.goal == 'cap' || e.n != 9) continue
     const k = byLv[e.level]
     k.n++
     if (e.win) k.w++

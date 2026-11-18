@@ -251,7 +251,7 @@ body.col .lvls button{flex:none}
 body.col .pgrid{grid-template-columns:repeat(3,1fr);gap:8px}
 body.col .pz{padding:5px 5px 7px;border-radius:12px;gap:5px}
 body.col .pz .n{font-size:12px;padding:0 2px}
-body.col .pz .n small{display:none}
+body.col .pz .n small{font-size:11px}
 body.col .tiles{grid-template-columns:1fr 1fr}
 body.col .two{grid-template-columns:1fr}
 body.col .stg.cur .card{grid-template-columns:1fr}
@@ -355,3 +355,27 @@ body.col .thead .prog{flex-basis:100%;max-width:none}
 body.col .app.ins.game{display:flex;flex-direction:column;min-height:100dvh}
 body.col .app.ins.game .insp{margin-top:auto}
 body.col .app.ins.game .bmain{flex:1;display:grid;align-content:center}
+
+/* урок правил, разбор, сыгранные партии */
+.ltext{font-size:15px;line-height:1.5;color:var(--text-2);padding:0 4px}
+.learnc .btn{align-self:flex-start;margin-top:4px}
+.today .tday .tx .btn{margin-top:8px;align-self:flex-start}
+.optnote{margin:-4px 0 0 98px;line-height:1.4}
+.rres .r-head{font-size:15px;font-weight:600;color:var(--accent);padding:0 4px}
+.rnav{display:flex;align-items:center;gap:12px;padding:0 4px}
+.rnav input{flex:1;accent-color:var(--accent)}
+.rnav .sm{min-width:92px;text-align:right}
+#rRec button{padding:0;font-size:14px;border-radius:5px}
+#rRec button.on{color:var(--accent-ink);font-weight:600}
+@media (hover:hover){ #rRec button:hover{color:var(--accent)} }
+.donecap{margin-top:24px}
+.donelist{margin-top:16px}
+.pz.fresh .n small{color:var(--text-3)}
+body.col .optnote{margin:0}
+body.col .today .tday{flex-direction:row;align-items:center;gap:14px}
+body.col .today .tday .goban{width:42%}
+body.col .today .tday .big2{font-size:18px}
+body.col .today .contc.has,body.col .today .learnc{order:-1}
+body.col .app.ins.lesson,body.col .app.ins.review{display:flex;flex-direction:column;min-height:100dvh}
+body.col .app.ins.lesson .bmain{padding:4px 40px}
+.app.lesson .bmain .goban{max-width:540px}

@@ -100,12 +100,15 @@ function pageToday() {
   const games = SES.games.filter(g => !g.over).sort((a, b) => b.upd - a.upd)
   const est = rankEstimate()
   const g = games[0]
+  // новичку вместо пустого "Продолжить" урок правил
+  const newbie = !g && !SES.learned && !LOG.some(e => e.t == 'g')
   const cont = g ? `<a class="cont" href="#g/${g.id}"><span class="mini">${miniBoard(g)}</span><span class="info"><b>${gameTitle(g)}, ${t('size', g.n)}</b><small>${gameSub(g, true)}</small><span class="t">${gameState(g, replay(g))}</span></span></a>` : `<p class="empty">${t('noGames')}</p>`
+  const contCard = newbie ? `<div class="card learnc"><b class="h">${t('learnHead')}</b><span class="big2">${t('learnTitle')}</span><small class="sm">${t('learnText')}</small><a class="btn soft a-btn" href="#learn">${t('learnBtn')}</a></div>` : `<div class="card contc ${g ? 'has' : ''}"><b class="h">${t('continue')}</b>${cont}</div>`
   const gear = isCol() ? `<a class="ibtn" href="#settings" aria-label="${t('settings')}">${ic('gear')}</a>` : ''
   tabPage(0, 0, `<div class="phead"><div><h1 class="big">${t('today')}</h1><p class="sub">${dateStr()}</p></div>${gear}</div>
   <div class="today">
-    <div class="card tday"><a href="#p/${pr.id}" class="goban" aria-label="${t('daily')}">${goSVG({...problemBoard(pr), crop: tileCrop(pr)})}</a><div class="tx"><b class="h">${t('daily')}</b><span class="big2">${isClassic(pr) ? t('goal_any') : goalText(pr.g)}</span><small class="sm">${isClassic(pr) ? t('colShort_' + pr.src) + ', ' + pr.k : t('aboutKyu', PZ_KYU[pr.l])}</small><a class="btn soft a-btn" href="#p/${pr.id}" style="margin-top:8px;align-self:flex-start">${t('solve')}</a></div></div>
-    <div class="card"><b class="h">${t('continue')}</b>${cont}</div>
+    <div class="card tday"><a href="#p/${pr.id}" class="goban" aria-label="${t('daily')}">${goSVG({...problemBoard(pr), crop: tileCrop(pr)})}</a><div class="tx"><b class="h">${t('daily')}</b><span class="big2">${isClassic(pr) ? t('goal_any') : goalText(pr.g)}</span><small class="sm">${isClassic(pr) ? t('colShort_' + pr.src) + ', ' + pr.k : t('aboutKyu', PZ_KYU[pr.l])}</small><a class="btn soft a-btn" href="#p/${pr.id}">${t('solve')}</a></div></div>
+    ${contCard}
     <div class="card"><b class="h">${t('yourRank')}</b><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="big2">${est == null ? t('noRank') : t('aboutKyu', est)}</span><small class="sm">${est == null ? '' : t('nextMark', nextMark(est))}</small></div>${lane(est)}${est == null ? `<small class="sm">${t('noRankHint')}</small>` : ''}</div>
     <div class="card"><b class="h">${t('newGame')}</b><div class="quick">${QUICK.map(([k], i) => `<button type="button" data-q="${i}">${t(k)}</button>`).join('')}</div></div>
   </div>`)
@@ -126,17 +129,19 @@ function pageNew(tab) {
   const o = SES.settings.ng
   const games = SES.games.filter(g => !g.over).sort((a, b) => b.upd - a.upd)
   const list = tab && games.length ? `<div class="glist"><div class="lcap">${t('games')}</div><div class="card games">${games.map(g => `<a class="cont" href="#g/${g.id}"><span class="mini" style="width:64px">${miniBoard(g)}</span><span class="info"><b>${gameTitle(g)}, ${t('size', g.n)}</b><small>${gameState(g, replay(g))}</small></span>${CH}</a>`).join('')}</div></div>` : ''
+  const done = tab && SES.done && SES.done.length ? `<div class="list donelist"><a class="li" href="#stats"><span class="tx">${t('doneHead')}</span><span class="meta">${SES.done.length}</span>${CH}</a></div>` : ''
   const seg = (k, vals, labels) => `<div class="seg" data-k="${k}">${vals.map((v, i) => `<button type="button" data-v="${v}" class="${String(o[k]) == String(v) ? 'on' : ''}">${labels[i]}</button>`).join('')}</div>`
   const bot = o.opp == 'bot'
   const komi = o.goal == 'cap' ? t('noKomi') : o.hcap >= 2 ? fmtNum(0.5) : fmtNum(o.komi != null ? o.komi : SES.settings.komi)
   const body = `${tab ? `<h1 class="big">${t('play')}</h1>` : ''}${list}
-  <div class="ng"><div class="prev" id="ngPrev"></div>
+  ${done}<div class="ng"><div class="prev" id="ngPrev"></div>
   <div class="form">
     <div class="opt"><span>${t('opponent')}</span>${seg('opp', ['bot', 'two'], [t('bot'), t('twoPlayers')])}</div>
     <div class="opt"><span>${t('board')}</span>${seg('n', [7, 9, 13, 19], ['7', '9', '13', '19'])}</div>
     <div class="opt"><span>${t('goal')}</span>${seg('goal', ['area', 'cap'], [t('territory'), t('capture')])}</div>
     ${o.goal == 'cap' ? `<div class="opt"><span>${t('capWho')}</span>${seg('capN', [1, 3, 5], ['1', '3', '5'])}</div>` : ''}
     ${bot ? `<div class="opt"><span>${t('botLevel')}</span><div class="lvl">${[0, 1, 2, 3].map(l => `<button type="button" data-l="${l}" class="${o.level == l ? 'on' : ''}">${t('lv' + l)}<small>${t('kyuShort', BOT_KYU[l])}</small></button>`).join('')}</div></div>
+    ${o.n > 9 ? `<p class="sm optnote">${t('kyuNote')}</p>` : ''}
     <div class="opt"><span>${t('color')}</span>${seg('color', ['b', 'r', 'w'], [t('black'), t('random'), t('white')])}</div>` : ''}
     <div class="list">
       <button type="button" class="li" id="ngHcap" ${o.goal == 'cap' ? 'disabled' : ''}>${t('handicap')}<span class="meta">${o.hcap >= 2 && o.goal != 'cap' ? t('stonesN', o.hcap) : t('none')}</span>${CH}</button>
@@ -201,8 +206,8 @@ function lvlChips(on) {
 }
 function tile(p, i, cur) {
   const done = SES.solved[p.id]
-  const cls = done ? 'done' : p == cur ? 'cur' : ''
-  const note = done ? t('solvedW') : SES.seen[p.id] ? t('startedW') : ''
+  const cls = (done ? 'done' : p == cur ? 'cur' : '') + (done || SES.seen[p.id] ? '' : ' fresh')
+  const note = done ? t('solvedW') : SES.seen[p.id] ? t('startedW') : p.g ? t('goalShort_' + p.g) : ''
   return `<a href="#p/${p.id}" class="pz ${cls}"><div class="goban">${goSVG({...problemBoard(p), crop: tileCrop(p)})}</div><span class="n">${p.k || i + 1}<small>${note}</small></span></a>`
 }
 
@@ -313,7 +318,8 @@ function pageStats() {
   <div class="card chart"><b class="h">${t('rankByWeek')}</b>${chart || `<p class="empty" style="margin-top:8px">${t('chartEmpty')}</p>`}</div>
   <div class="two"><div class="card tbl"><b class="h">${t('vsBot')}</b><div class="row hd"><span>${t('level')}</span><span>${t('winsCol')}</span><span>${t('gamesCol')}</span></div>${rowsBot || `<p class="empty" style="padding-top:8px">${t('noBotGames')}</p>`}</div>
     <div class="card tbl"><b class="h">${t('tasks')}</b><div class="row hd"><span>${t('level')}</span><span>${t('solvedCol')}</span><span>${t('totalCol')}</span></div>${rowsPz}</div></div>
-  ${twoGames ? `<p class="sm" style="margin-top:14px">${t('twoGamesN', twoGames)}</p>` : ''}`)
+  ${twoGames ? `<p class="sm" style="margin-top:14px">${t('twoGamesN', twoGames)}</p>` : ''}
+  <div class="lcap donecap">${t('doneHead')}</div><div class="card games">${doneList()}</div>`)
 }
 
 // сила по неделям: оценка по журналу на конец каждой недели
@@ -342,8 +348,9 @@ function rankChart() {
 function pagePath() {
   const est = rankEstimate()
   const cur = stageIndex(est)
-  const games = LOG.filter(e => e.t == 'g' && e.opp == 'bot').length
-  const pz = LOG.filter(e => e.t == 'p').length
+  // в основе оценки только партии на 9 на 9 без форы и задачи своих уровней
+  const games = LOG.filter(e => e.t == 'g' && e.opp == 'bot' && e.win != null && e.n == 9 && !e.hcap && e.goal != 'cap').length
+  const pz = LOG.filter(e => e.t == 'p' && e.l != 'c').length
   const statsLink = isCol() ? `<a class="link" href="#stats">${t('stats')}</a>` : ''
   tabPage(3, 3, `<div class="phead"><h1 class="big">${t('path')}</h1>${statsLink}</div>
   <div class="rankhead ${est == null ? 'none' : ''}"><span class="big2">${est == null ? t('noRank') : t('aboutKyu', est)}</span><span class="sm">${est == null ? t('noRankHint') : t('rankBasis', games, pz)}</span></div>
@@ -356,7 +363,7 @@ function pagePath() {
       const done = list.filter(p => SES.solved[p.id]).length
       const bs = botStats(s.bot, 9)
       const first = list.find(p => !SES.solved[p.id]) || list[0]
-      card = `<div class="card"><div><b class="h">${t('stageTasks')}</b><span class="prog"><i style="width:${(done / list.length * 100).toFixed(1)}%"></i></span><span class="sm">${t('nOf', done, list.length)}</span></div><div><b class="h">${t('stageBot', t('lv' + s.bot).toLowerCase())}</b><span class="prog"><i style="width:${bs.n ? (bs.w / bs.n * 100).toFixed(1) : 0}%"></i></span><span class="sm">${t('winsOf', bs.w, bs.n)}</span></div><div class="acts"><a class="btn a-btn" href="#p/${first.id}">${t('stageTasksBtn')}</a><button type="button" class="btn soft" id="stBot">${t('stageBotBtn')}</button></div></div>`
+      card = `<div class="card"><div><b class="h">${t('stageTasks')}</b><span class="prog"><i style="width:${(done / list.length * 100).toFixed(1)}%"></i></span><span class="sm">${t('nOf', done, list.length)}</span></div><div><b class="h">${t('stageBot', t('lv' + s.bot).toLowerCase())}</b><span class="prog"><i style="width:${bs.n ? (bs.w / bs.n * 100).toFixed(1) : 0}%"></i></span><span class="sm">${bs.n ? t('winsOf', bs.w, bs.n) : t('noGamesYet')}</span></div><div class="acts">${i == 0 ? `<a class="btn a-btn" href="#learn">${t('learnBtn')}</a>` : ''}<a class="btn ${i == 0 ? 'soft' : ''} a-btn" href="#p/${first.id}">${t('stageTasksBtn')}</a><button type="button" class="btn soft" id="stBot">${t('stageBotBtn')}</button></div></div>`
     }
     const later = !s.pz ? ` <span class="k">${t('later')}</span>` : ''
     return `<div class="stg ${cls}"><div class="rail">${mark}</div><div class="body"><div class="t"><b>${t(s.key)}</b><span class="k">${s.k ? t('kyuShort', s.k) : t('dan1')}</span>${later}</div><p>${t(s.key + 'd')}</p>${card}</div></div>`

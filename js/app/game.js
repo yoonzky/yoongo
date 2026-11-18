@@ -25,6 +25,10 @@ function newGame(o) {
   return rec
 }
 
+// по китайским правилам белым за каждый камень форы ещё очко
+const hcapBonus = g => (g.hcap >= 2 && g.goal != 'cap' ? g.hcap : 0)
+const gameKomi = g => g.komi + hcapBonus(g)
+
 function gameTitle(g) {
   if (g.goal == 'cap') return t('capTitle', g.capN)
   return g.opp == 'bot' ? t('withBot') : t('twoPlayers')
@@ -50,6 +54,8 @@ function openGame(id) {
     return
   }
   const go = replay(rec)
+  // после "Играть дальше" два паса в записи не считаются, остаются только новые
+  if (rec.phase == 'play') go.passes %= 2
   G = {rec, go, think: false, token: 0, own: null, dead: null, score: null, lowWr: 0}
   renderGame()
   if (rec.phase == 'score' && !rec.over) startScoring()
@@ -124,18 +130,17 @@ function renderPanel() {
     else head = o.winner == BLACK ? t('blackWon') : t('whiteWon')
     if (o.reason == 'score') {
       big = `<span class="r-time num">${o.winner == BLACK ? t('blackShort') : t('whiteShort')}+${fmtNum(o.margin)}</span>`
-      rows = `<div class="rows"><div class="row"><span>${t('blackArea')}</span><b class="num">${o.b}</b></div><div class="row"><span>${t('whiteArea')}</span><b class="num">${o.w}</b></div><div class="row"><span>${t('komi')}</span><b class="num">${fmtNum(rec.komi)}</b></div></div>`
+      rows = scoreRows(rec, o)
     } else {
       let why = t('end_' + o.reason, rec.capN)
       if (o.reason == 'resign' && rec.opp == 'bot') why = o.winner == rec.human ? t('end_botResigned') : t('end_youResigned')
       big = `<span class="big2">${why}</span>`
     }
-    el.innerHTML = `<div class="result"><span class="r-head">${head}</span>${big}${rows}</div><div class="acts2"><button type="button" class="btn" id="gAgain">${t('again')}</button><button type="button" class="btn plain" id="gHome">${t('toNew')}</button></div>`
+    el.innerHTML = `<div class="result"><span class="r-head">${head}</span>${big}${rows}</div><div class="acts2"><button type="button" class="btn" id="gAgain">${t('again')}</button><a class="btn plain a-btn" href="#r/${rec.id}">${t('review')}</a></div>`
     $('#gAgain').onclick = () => {
       const r = newGame({...SES.settings.ng, opp: rec.opp, n: rec.n, goal: rec.goal, capN: rec.capN, level: rec.level, color: rec.human == WHITE ? 'w' : 'b', hcap: rec.hcap, komi: rec.komi, clock: CLOCKS.findIndex(c => JSON.stringify(c) == JSON.stringify(rec.clock))})
       location.hash = '#g/' + r.id
     }
-    $('#gHome').onclick = () => (location.hash = '#new')
     return
   }
   if (rec.phase == 'score') {
@@ -144,9 +149,9 @@ function renderPanel() {
       el.innerHTML = `<p class="mark-note">${t('counting')}</p>`
       return
     }
-    const lead = s.b - s.w - rec.komi
+    const lead = s.b - s.w - gameKomi(rec)
     el.innerHTML = `<div class="result keep"><span class="r-head">${lead > 0 ? t('blackAhead') : t('whiteAhead')}</span><span class="r-time num">+${fmtNum(Math.abs(lead))}</span>
-      <div class="rows"><div class="row"><span>${t('blackArea')}</span><b class="num">${s.b}</b></div><div class="row"><span>${t('whiteArea')}</span><b class="num">${s.w}</b></div><div class="row"><span>${t('komi')}</span><b class="num">${fmtNum(rec.komi)}</b></div></div></div>
+      ${scoreRows(rec, s)}</div>
       <p class="mark-note">${t('deadNote')}</p>
       <div class="acts2"><button type="button" class="btn" id="gAccept">${t('accept')}</button><button type="button" class="btn plain" id="gResume">${t('resume')}</button></div>`
     $('#gAccept').onclick = acceptScore
@@ -158,6 +163,13 @@ function renderPanel() {
   $('#tUndo').onclick = undo
   $('#tPass').onclick = () => humanPlay(PASS)
   $('#tEst').onclick = toggleEstimate
+}
+
+// строки счёта: площадь, коми и очки белым за фору
+function scoreRows(rec, s) {
+  const row = (k, v) => `<div class="row"><span>${k}</span><b class="num">${v}</b></div>`
+  const bonus = hcapBonus(rec)
+  return `<div class="rows">${row(t('blackArea'), s.b)}${row(t('whiteArea'), s.w)}${row(t('komi'), fmtNum(rec.komi))}${bonus ? row(t('hcapBonus'), bonus) : ''}</div>`
 }
 
 function colorAt(i) {
@@ -290,7 +302,7 @@ async function maybeBot() {
   const token = ++G.token
   renderSide()
   const t0 = Date.now()
-  const r = await engine('bot', {n: rec.n, hcap: rec.hcap, moves: rec.moves, komi: rec.komi, goal: rec.goal, capN: rec.capN, level: rec.level})
+  const r = await engine('bot', {n: rec.n, hcap: rec.hcap, moves: rec.moves, komi: gameKomi(rec), goal: rec.goal, capN: rec.capN, level: rec.level})
   // минимальная пауза, чтобы ход бота не выскакивал мгновенно
   const wait = 350 - (Date.now() - t0)
   if (wait > 0) await new Promise(res => setTimeout(res, wait))
@@ -339,12 +351,10 @@ async function toggleEstimate() {
   const r = await engine('own', {n: rec.n, hcap: rec.hcap, moves: rec.moves, po: 400})
   if (!G || G.rec != rec || !r) return
   G.own = r.own
-  const dead = new Set(r.dead)
-  const s = areaScore(G.go.b, rec.n, dead)
   // оценка по владению: каждая точка уходит тому, у кого её чаще забирают
   let lead = 0
   for (let p = 0; p < r.own.length; p++) if (G.go.b[p] != EDGE) lead += r.own[p] > .2 ? 1 : r.own[p] < -.2 ? -1 : 0
-  lead -= rec.komi
+  lead -= gameKomi(rec)
   toast(t(lead > 0 ? 'estB' : 'estW', fmtNum(Math.round(Math.abs(lead) * 2) / 2)))
   redraw()
 }
@@ -385,7 +395,7 @@ function scorePick(p) {
 function acceptScore() {
   const {rec} = G
   const s = G.score
-  const lead = s.b - s.w - rec.komi
+  const lead = s.b - s.w - gameKomi(rec)
   finish({winner: lead > 0 ? BLACK : WHITE, reason: 'score', margin: Math.abs(lead), b: s.b, w: s.w})
 }
 
@@ -406,6 +416,9 @@ function finish(o) {
   rec.phase = 'over'
   stopClock()
   SES.games = SES.games.filter(g => g.id != rec.id)
+  // сыгранные партии хранятся для разбора, последние MAX_DONE
+  const {tm, ...keep} = rec
+  if (rec.moves.length) SES.done = [{...keep, end: Date.now(), dead: o.reason == 'score' && G.dead ? [...G.dead] : null}, ...(SES.done || []).filter(g => g.id != rec.id)].slice(0, MAX_DONE)
   writeSes()
   const win = rec.opp == 'bot' ? o.winner == rec.human : null
   LOG.push({t: 'g', opp: rec.opp, n: rec.n, level: rec.level, goal: rec.goal, hcap: rec.hcap, human: rec.human, win, reason: o.reason, margin: o.margin || 0, moves: rec.moves.length, undos: rec.undos, date: Date.now()})
@@ -437,17 +450,27 @@ function gameMenu(btn) {
     }}])})
   }
   items.push({t: t('copySgf'), icon: 'copy', fn: () => {
-    try {
-      navigator.clipboard.writeText(toSGF(rec))
-      toast(t('copied'))
-    } catch (e) {}
+    copySGF(rec)
   }})
   menuAt(btn, items)
 }
 
+function copySGF(rec) {
+  const ok = () => toast(t('copied'))
+  const bad = () => toast(t('copyFail'))
+  try {
+    navigator.clipboard.writeText(toSGF(rec)).then(ok, bad)
+  } catch (e) {
+    bad()
+  }
+}
+
 function toSGF(rec) {
-  const go = replay({...rec, moves: []})
-  let s = `(;GM[1]FF[4]CA[UTF-8]AP[Yoongo]SZ[${rec.n}]KM[${rec.komi}]RU[Chinese]`
+  const d = new Date(rec.t0 || Date.now())
+  const dt = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+  let s = `(;GM[1]FF[4]CA[UTF-8]AP[Yoongo]SZ[${rec.n}]KM[${rec.komi}]RU[Chinese]DT[${dt}]`
+  const o = rec.over
+  if (o) s += `RE[${o.winner == BLACK ? 'B' : 'W'}+${o.reason == 'score' ? o.margin : o.reason == 'resign' ? 'R' : o.reason == 'time' ? 'T' : ''}]`
   if (rec.hcap >= 2) s += `HA[${rec.hcap}]AB` + handicapPoints(rec.n, rec.hcap).map(p => `[${toSgf(rec.n, p)}]`).join('')
   if (rec.opp == 'bot') s += rec.human == BLACK ? 'PB[You]PW[Yoongo bot]' : 'PB[Yoongo bot]PW[You]'
   rec.moves.forEach((m, i) => {
@@ -468,8 +491,14 @@ function startClock() {
     if (!G || !G.rec.clock || G.rec.over || G.rec.phase != 'play' || G.paused || document.hidden) return
     const c = G.go.turn
     const s = G.rec.tm[c]
-    if (s.m > 0) s.m -= dt
-    else {
+    if (s.m > 0) {
+      s.m -= dt
+      // перерасход основного времени списывается с бёёми
+      if (s.m < 0) {
+        s.l += s.m
+        s.m = 0
+      }
+    } else {
       s.l -= dt
       if (s.l <= 0) {
         s.p--

@@ -28,6 +28,8 @@ function route() {
     G = null
   }
   if (k != 'p') P = null
+  if (k != 'r') R = null
+  if (k != 'learn') L = null
   if (k == 'today') pageToday()
   else if (k == 'new') isCol() ? pageNew(true) : pageNew(false)
   else if (k == 'play') isCol() ? pageNew(true) : pageNew(false)
@@ -37,6 +39,8 @@ function route() {
   else if (k == 'settings') pageSettings()
   else if (k == 'g') openGame(a)
   else if (k == 'p') openProblem(a)
+  else if (k == 'r') openReview(a)
+  else if (k == 'learn') openLesson(a)
   else pageToday()
   const pg = $('.page')
   if (pg) pg.scrollTop = 0
@@ -59,7 +63,11 @@ function boot() {
       if (G.rec.phase == 'score' && G.score) recount()
     } else if (P) {
       const id = P.pr.id
-      openProblem(id)
+      openProblem(id, true)
+    } else if (R) {
+      const k = R.k
+      openReview(R.rec.id)
+      reviewAt(k)
     } else route()
   })
   addEventListener('pagehide', writeSes)
@@ -67,8 +75,15 @@ function boot() {
     if (document.hidden) writeSes()
   })
   addEventListener('keydown', e => {
+    if (e.key == 'Escape' && openMenu) closeMenu()
     if (e.target.closest && e.target.closest('input,textarea')) return
-    if (G && !e.metaKey && !e.ctrlKey && !e.altKey && (e.key == 'z' || e.key == 'Z')) undo()
+    if (e.metaKey || e.ctrlKey || e.altKey) return
+    if (G && (e.key == 'z' || e.key == 'Z')) undo()
+    // в разборе стрелки листают ходы, если доска не в фокусе
+    if (R && !e.defaultPrevented && (e.key == 'ArrowLeft' || e.key == 'ArrowRight')) {
+      e.preventDefault()
+      reviewAt(R.k + (e.key == 'ArrowLeft' ? -1 : 1))
+    }
   })
   route()
 }

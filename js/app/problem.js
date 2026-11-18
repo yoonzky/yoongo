@@ -66,15 +66,17 @@ function problemTitle(pr) {
   return t('problemN', pr.id)
 }
 
-function openProblem(id) {
+// keep: заново ту же задачу, неудача и подсказка не забываются
+function openProblem(id, keep) {
   clearTimeout(autoTimer)
+  const was = keep && P && P.pr.id == id ? {failed: P.failed, hinted: P.hinted} : {}
   const pr = findProblem(id)
   if (!pr) {
     location.hash = '#tasks'
     return
   }
   const base = problemBoard(pr)
-  P = {pr, moves: [], b: base.b.slice(), path: new Set([hashOf(base.b, 19)]), state: 'move', failed: false, hinted: false, busy: false, hint: null, last: null, logged: false, base}
+  P = {pr, moves: [], b: base.b.slice(), path: new Set([hashOf(base.b, 19)]), state: 'move', failed: !!was.failed, hinted: !!was.hinted, busy: false, hint: null, last: null, logged: false, base}
   if (isClassic(pr)) P.node = parseTree(pr.m)
   SES.seen[pr.id] = 1
   SES.lastPz = pr.id
@@ -127,7 +129,7 @@ function renderPState() {
   }
   const h = $('#pHint'), a = $('#pAgain'), n = $('#pNext')
   if (h) h.onclick = problemHint
-  if (a) a.onclick = () => openProblem(P.pr.id)
+  if (a) a.onclick = () => openProblem(P.pr.id, true)
   if (n) n.onclick = () => (location.hash = '#p/' + nextProblem(P.pr).id)
 }
 
@@ -212,6 +214,7 @@ async function problemMove(p) {
   }
   if (!r.ok) {
     P.state = 'wrong'
+    P.failed = true
     logProblem(false)
   } else if (r.solved) markSolved()
   P.view.set({b: P.b, last: P.last, pop: r.reply != PASS ? r.reply : null})
@@ -226,6 +229,7 @@ async function classicMove(p) {
   P.view.set({b: P.b, last: p, hint: null, pop: p})
   if (!nd) {
     P.state = 'wrong'
+    P.failed = true
     logProblem(false)
     renderPState()
     return
@@ -256,7 +260,6 @@ async function classicMove(p) {
 
 // первая попытка идёт в журнал один раз
 function logProblem(ok) {
-  if (!ok) P.failed = true
   if (P.logged || (SES.loggedPz && SES.loggedPz[P.pr.id])) return
   P.logged = true
   SES.loggedPz = SES.loggedPz || {}
@@ -268,7 +271,7 @@ function logProblem(ok) {
 
 async function problemHint() {
   if (P.busy) return
-  if (P.state == 'wrong') openProblem(P.pr.id)
+  if (P.state == 'wrong') openProblem(P.pr.id, true)
   P.hinted = true
   const pr = P.pr
   if (isClassic(pr)) {

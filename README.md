@@ -23,13 +23,15 @@ Classic problems follow the solution line from the book. The four levels are gen
 
 ## Features
 
+- A short interactive lesson on the rules: liberties, capture, ko, two eyes, counting.
 - Play the bot at four levels or a friend on one screen, on 7x7, 9x9, 13x13 and 19x19.
 - Territory or capture go: first to take 1, 3 or 5 stones wins.
 - Handicap, komi and a clock with byo-yomi.
-- Area scoring, positional superko. After two passes the bot marks dead groups, a tap on a group changes that.
+- Area scoring, positional superko, white gets a point per handicap stone. After two passes the bot marks dead groups, a tap on a group changes that.
 - Up to eight unfinished games, undo, a rough estimate of the position, SGF export.
+- The last 40 finished games, replayed move by move.
 - Hints, and an optional jump to the next problem after a correct solution.
-- Path: a rough strength in kyu from games against the bot and first tries at problems.
+- Path: a rough strength in kyu from 9x9 games against the bot and first tries at problems.
 - Light and dark themes, Russian and English.
 - On a phone 13x13 and 19x19 open magnified, with a minimap.
 
@@ -40,6 +42,7 @@ Classic problems follow the solution line from the book. The four levels are gen
 | Move over the board | arrow keys |
 | Place a stone | `Enter` or `Space` |
 | Undo | `Z` |
+| Step through a finished game | left and right arrows |
 
 ## Structure
 
@@ -47,7 +50,7 @@ Classic problems follow the solution line from the book. The four levels are gen
 index.html     markup and script order
 css/           tokens, base, app
 js/engine/     rules, bot, ld, api, worker
-js/app/        i18n, store, ui, board, pages, game, problem, main
+js/app/        i18n, store, ui, board, pages, game, problem, learn, review, main
 data/          generated problems, classic collections
 icons/         site and app icons
 ```
