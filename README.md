@@ -14,8 +14,8 @@
 |---|---|---|
 | Xuanxuan Qijing | 333 | classic collection, China, 1349 |
 | Guanzi Pu | 1467 | classic collection, China, 17th century |
-| Beginner | 160 | capture in one move, saving stones in atari |
-| Easy | 228 | chasing stones, living and killing in one move |
+| Beginner | 24 | capture in one move, saving stones in atari |
+| Easy | 72 | chasing stones, living and killing in one move |
 | Medium | 234 | life and death in the corner and on the edge |
 | Hard | 154 | longer life and death lines |
 
@@ -43,6 +43,7 @@ Classic problems follow the solution line from the book. The four levels are gen
 | Place a stone | `Enter` or `Space` |
 | Undo | `Z` |
 | Step through a finished game | left and right arrows |
+| Problem: hint, retry, next | `H`, `R`, `N` |
 
 ## Structure
 

@@ -2,19 +2,17 @@
 // разделы: каркас, сегодня, новая партия, задачи, путь, статистика, настройки
 'use strict'
 
-const NAV = [['sun', 'today', '#today'], ['plus', 'newGame', '#new'], ['grid', 'tasks', '#tasks'], ['path', 'path', '#path'], ['stats', 'stats', '#stats']]
-const TABS = [['sun', 'today', '#today'], ['play', 'play', '#play'], ['grid', 'tasks', '#tasks'], ['path', 'path', '#path']]
+const NAV = [['home', 'home', '#home'], ['plus', 'newGame', '#new'], ['grid', 'tasks', '#tasks'], ['path', 'path', '#path'], ['stats', 'stats', '#stats']]
+const TABS = [['home', 'home', '#home'], ['play', 'play', '#play'], ['grid', 'tasks', '#tasks'], ['path', 'path', '#path']]
 const root = () => $('#root')
 
-function miniBoard(g) {
-  const go = replay(g)
-  return `<div class="goban">${goSVG({n: g.n, b: go.b})}</div>`
-}
+const miniBoardSvg = g => goSVG({n: g.n, b: replay(g).b})
+const miniBoard = g => `<div class="goban">${miniBoardSvg(g)}</div>`
 
 function sidebar(sel) {
   const games = SES.games.filter(g => !g.over)
-  return `<aside class="sb">${LOGO}
-    ${NAV.map(([i, k, h], n) => `<a href="${h}" title="${t(k)}" class="${n === sel ? 'on' : ''}">${ic(i)}${t(k)}${n == 2 ? `<span class="cnt" id="sbCnt">${t('nOf', solvedCount(), totalProblems())}</span>` : ''}</a>`).join('')}
+  return `<aside class="sb"><a href="#home" class="home" aria-label="${t('home')}">${LOGO}</a>
+    ${NAV.map(([i, k, h], n) => n == 0 ? '' : `<a href="${h}" title="${t(k)}" class="${n === sel ? 'on' : ''}">${ic(i)}${t(k)}${n == 2 ? `<span class="cnt" id="sbCnt">${t('nOf', solvedCount(), totalProblems())}</span>` : ''}</a>`).join('')}
     <div id="sbGames">${sideGames(games, sel)}</div>
     <div class="spacer"></div>
     <a href="#settings" title="${t('settings')}" class="foot ${sel == 's' ? 'on' : ''}">${ic('gear')}${t('settings')}</a></aside>`
@@ -81,42 +79,67 @@ function dailyProblem() {
   return PROBLEMS[day % PROBLEMS.length]
 }
 
-function lane(est) {
-  // восемь рубежей от 30 кю, текущий отмечен
-  const marks = [30, 25, 20, 15, 10, 5, 1, 0]
-  const cur = est == null ? -1 : marks.findIndex(k => est > k) - 1
-  let s = '<div class="mlane">'
-  for (let i = 0; i < 8; i++) {
-    const x = 6 + i * (88 / 7)
-    s += i < cur ? `<span class="st b" style="left:${x}%"></span>` : i == cur ? `<span class="st b cur" style="left:${x}%"></span>` : `<span class="p" style="left:${x}%"></span>`
-  }
-  return s + '</div>'
+const QUICK = [
+  {k: 'q9', o: {opp: 'bot', n: 9, goal: 'area'}},
+  {k: 'q13', o: {opp: 'bot', n: 13, goal: 'area'}},
+  {k: 'q19', o: {opp: 'bot', n: 19, goal: 'area'}},
+  {k: 'twoPlayers', o: {opp: 'two', n: 9, goal: 'area'}, st: [['ee', BLACK], ['fd', WHITE]]},
+  {k: 'capture', o: {opp: 'bot', n: 9, goal: 'cap'}, st: [['ee', WHITE], ['de', BLACK], ['ed', BLACK], ['fe', BLACK]]},
+]
+
+// значок быстрого старта: доска нужного размера, у вдвоём и захвата пара камней
+function quickGlyph(q) {
+  const n = q.o.n
+  const b = newBoard(n)
+  for (const [v, c] of q.st || []) b[fromSgf(n, v)] = c
+  return `<span class="goban">${goSVG({n, b})}</span>`
 }
 
-const QUICK = [['q9', {opp: 'bot', n: 9, goal: 'area'}], ['q13', {opp: 'bot', n: 13, goal: 'area'}], ['q19', {opp: 'bot', n: 19, goal: 'area'}], ['twoPlayers', {opp: 'two', n: 9, goal: 'area'}], ['capture', {opp: 'bot', n: 9, goal: 'cap'}]]
-
-function pageToday() {
+// главная: одно главное дело крупно, ниже быстрый старт и сводка
+function pageHome() {
   const pr = dailyProblem()
-  const games = SES.games.filter(g => !g.over).sort((a, b) => b.upd - a.upd)
-  const est = rankEstimate()
-  const g = games[0]
-  // новичку вместо пустого "Продолжить" урок правил
+  const g = SES.games.filter(x => !x.over).sort((a, b) => b.upd - a.upd)[0]
   const newbie = !g && !SES.learned && !LOG.some(e => e.t == 'g')
-  const cont = g ? `<a class="cont" href="#g/${g.id}"><span class="mini">${miniBoard(g)}</span><span class="info"><b>${gameTitle(g)}, ${t('size', g.n)}</b><small>${gameSub(g, true)}</small><span class="t">${gameState(g, replay(g))}</span></span></a>` : `<p class="empty">${t('noGames')}</p>`
-  const contCard = newbie ? `<div class="card learnc"><b class="h">${t('learnHead')}</b><span class="big2">${t('learnTitle')}</span><small class="sm">${t('learnText')}</small><a class="btn soft a-btn" href="#learn">${t('learnBtn')}</a></div>` : `<div class="card contc ${g ? 'has' : ''}"><b class="h">${t('continue')}</b>${cont}</div>`
+  const est = rankEstimate()
+  const prGoal = isClassic(pr) ? t('goal_any') : goalText(pr.g)
+  const prSub = isClassic(pr) ? t('colShort_' + pr.src) + ', ' + pr.k : t('pl' + pr.l) + ', ' + t('aboutKyu', PZ_KYU[pr.l])
+  const prSvg = goSVG({...problemBoard(pr), crop: tileCrop(pr)})
+  let hero
+  if (g) {
+    const go = replay(g)
+    hero = {href: '#g/' + g.id, svg: goSVG({n: g.n, b: go.b, last: go.last}), cap: t('gameOn'), title: `${gameTitle(g)}, ${t('size', g.n)}`, sub: `${gameSub(g, true)}, ${gameState(g, go)}`, main: `<a class="btn a-btn" href="#g/${g.id}">${t('continue')}</a>`, alt: `<a class="btn plain a-btn" href="#p/${pr.id}">${t('daily')}</a>`}
+  } else if (newbie) {
+    hero = {href: '#learn', svg: goSVG({n: LN, b: lessonBoard(LESSON[5])}), cap: t('learnHead'), title: t('learnTitle'), sub: t('learnText'), main: `<a class="btn a-btn" href="#learn">${t('learnBtn')}</a>`, alt: `<button type="button" class="btn plain" id="hPlay">${t('playNow')}</button>`}
+  } else {
+    hero = {href: '#p/' + pr.id, svg: prSvg, cap: `${t('daily')}, ${dateStr()}`, title: prGoal, sub: prSub, main: `<a class="btn a-btn" href="#p/${pr.id}">${t('solve')}</a>`, alt: `<a class="btn plain a-btn" href="#new">${t('newGame')}</a>`}
+  }
+  // первая карточка сводки: задача дня, если она не в главном блоке, иначе прогресс задач
+  let c1
+  if (g || newbie) c1 = `<a class="card hc hpz" href="#p/${pr.id}"><span class="goban">${prSvg}</span><span class="tx"><b class="h">${t('daily')}</b><b>${prGoal}</b><small class="sm">${prSub}</small></span></a>`
+  else {
+    const n = solvedCount(), all = totalProblems()
+    c1 = `<a class="card hc" href="#tasks"><b class="h">${t('tasks')}</b><span class="big2 num">${t('nOf', n, all)}</span><span class="prog"><i style="width:${(n / all * 100).toFixed(1)}%"></i></span><small class="sm">${t('pzMix')}</small></a>`
+  }
+  const c2 = `<a class="card hc" href="#path"><b class="h">${t('yourRank')}</b><span class="big2">${est == null ? t('noRank') : t('aboutKyu', est)}</span><small class="sm">${est == null ? t('noRankHint') : t('nextMark', nextMark(est))}</small></a>`
+  const d = SES.done && SES.done[0]
+  const c3 = d ? `<a class="card hc hpz" href="#r/${d.id}"><span class="goban">${miniBoardSvg(d)}</span><span class="tx"><b class="h">${t('lastGame')}</b><b>${resultText(d)}</b><small class="sm">${gameTitle(d)}, ${t('size', d.n)}</small></span></a>` : ''
+  const lv = t('botLv', t('lv' + SES.settings.ng.level).toLowerCase())
   const gear = isCol() ? `<a class="ibtn" href="#settings" aria-label="${t('settings')}">${ic('gear')}</a>` : ''
-  tabPage(0, 0, `<div class="phead"><div><h1 class="big">${t('today')}</h1><p class="sub">${dateStr()}</p></div>${gear}</div>
-  <div class="today">
-    <div class="card tday"><a href="#p/${pr.id}" class="goban" aria-label="${t('daily')}">${goSVG({...problemBoard(pr), crop: tileCrop(pr)})}</a><div class="tx"><b class="h">${t('daily')}</b><span class="big2">${isClassic(pr) ? t('goal_any') : goalText(pr.g)}</span><small class="sm">${isClassic(pr) ? t('colShort_' + pr.src) + ', ' + pr.k : t('aboutKyu', PZ_KYU[pr.l])}</small><a class="btn soft a-btn" href="#p/${pr.id}">${t('solve')}</a></div></div>
-    ${contCard}
-    <div class="card"><b class="h">${t('yourRank')}</b><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="big2">${est == null ? t('noRank') : t('aboutKyu', est)}</span><small class="sm">${est == null ? '' : t('nextMark', nextMark(est))}</small></div>${lane(est)}${est == null ? `<small class="sm">${t('noRankHint')}</small>` : ''}</div>
-    <div class="card"><b class="h">${t('newGame')}</b><div class="quick">${QUICK.map(([k], i) => `<button type="button" data-q="${i}">${t(k)}</button>`).join('')}</div></div>
-  </div>`)
-  $$('.quick button').forEach(b => b.onclick = () => {
-    const q = QUICK[+b.dataset.q][1]
+  tabPage(0, 0, `${isCol() ? `<div class="hhead">${LOGO}${gear}</div>` : ''}
+  <section class="card hero"><a class="goban" href="${hero.href}" tabindex="-1">${hero.svg}</a><div class="tx"><b class="h">${hero.cap}</b><h2>${hero.title}</h2><p class="sm">${hero.sub}</p><div class="acts">${hero.main}${hero.alt}</div></div></section>
+  <div class="hcap"><b>${t('playCap')}</b><a class="link" href="#new">${lv}, ${t('tune')}</a></div>
+  <div class="qtiles">${QUICK.map((q, i) => `<button type="button" class="qt" data-q="${i}">${quickGlyph(q)}<span class="tx"><b>${t(q.k)}</b><small>${t(q.k + 'Sub')}</small></span></button>`).join('')}</div>
+  <div class="hcards ${c3 ? 'three' : ''}">${c1}${c2}${c3}</div>`)
+  $$('.qt').forEach(b => b.onclick = () => {
+    const q = QUICK[+b.dataset.q].o
     const r = newGame({...SES.settings.ng, ...q, capN: 3, hcap: 0, komi: null, clock: 0})
     location.hash = '#g/' + r.id
   })
+  const hp = $('#hPlay')
+  if (hp) hp.onclick = () => {
+    const r = newGame({...SES.settings.ng, opp: 'bot', n: 9, goal: 'area', level: 0, color: 'b', hcap: 0, komi: null, clock: 0})
+    location.hash = '#g/' + r.id
+  }
 }
 
 function nextMark(est) {
@@ -151,7 +174,7 @@ function pageNew(tab) {
     <button type="button" class="btn" id="ngGo">${t('playBtn')}</button>
   </div></div>`
   if (tab) tabPage(1, 1, body)
-  else pushedPage(1, '#today', t('today'), t('newGame'), body)
+  else pushedPage(1, '#home', t('home'), t('newGame'), body)
   const hc = o.goal == 'cap' ? 0 : o.n == 7 ? Math.min(o.hcap, 4) : o.hcap
   const prevB = newBoard(o.n)
   for (const p of handicapPoints(o.n, hc)) prevB[p] = BLACK
@@ -211,7 +234,8 @@ function tile(p, i, cur) {
   return `<a href="#p/${p.id}" class="pz ${cls}"><div class="goban">${goSVG({...problemBoard(p), crop: tileCrop(p)})}</div><span class="n">${p.k || i + 1}<small>${note}</small></span></a>`
 }
 
-function pageTasks(lv, page = 1) {
+// без номера страницы открывается та, где первая нерешённая
+function pageTasks(lv, page) {
   if (lv == null) {
     const last = SES.lastPz && findProblem(SES.lastPz)
     lv = last ? (isClassic(last) ? 'c' + last.src : last.l) : 'c'
@@ -230,9 +254,10 @@ function pageTasks(lv, page = 1) {
     const col = COLLECTIONS.find(c => c.src == src) || COLLECTIONS[0]
     const list = CLASSICS.filter(p => p.src == col.src)
     const pages = Math.ceil(list.length / PAGE)
-    page = Math.max(1, Math.min(pages, page))
     const solvedLv = list.filter(p => SES.solved[p.id]).length
     const cur = list.find(p => !SES.solved[p.id])
+    if (page == null) page = cur ? Math.floor(list.indexOf(cur) / PAGE) + 1 : 1
+    page = Math.max(1, Math.min(pages, page))
     const part = list.slice((page - 1) * PAGE, page * PAGE)
     const pager = pages > 1 ? `<div class="pager">${Array.from({length: pages}, (_, i) => `<a href="#tasks/c${col.src}/${i + 1}" class="${i + 1 == page ? 'on' : ''}">${i * PAGE + 1}-${Math.min(list.length, (i + 1) * PAGE)}</a>`).join('')}</div>` : ''
     tabPage(2, 2, `${head}${lvlChips('c')}
@@ -244,6 +269,7 @@ function pageTasks(lv, page = 1) {
     const solvedLv = list.filter(p => SES.solved[p.id]).length
     const cur = list.find(p => !SES.solved[p.id])
     const pages = Math.ceil(list.length / PAGE)
+    if (page == null) page = cur ? Math.floor(list.indexOf(cur) / PAGE) + 1 : 1
     page = Math.max(1, Math.min(pages, page))
     const part = list.slice((page - 1) * PAGE, page * PAGE)
     const pager = pages > 1 ? `<div class="pager">${Array.from({length: pages}, (_, i) => `<a href="#tasks/${lv}/${i + 1}" class="${i + 1 == page ? 'on' : ''}">${i * PAGE + 1}-${Math.min(list.length, (i + 1) * PAGE)}</a>`).join('')}</div>` : ''
@@ -311,7 +337,10 @@ function pageStats() {
     const s = botStats(l)
     return s.n ? `<div class="row"><span>${t('lv' + l)}</span><span class="num">${s.w}</span><span class="num">${s.n}</span></div>` : ''
   }).join('')
-  const rowsPz = [0, 1, 2, 3].map(l => `<div class="row"><span>${t('pl' + l)}</span><span class="num">${solvedCount(l)}</span><span class="num">${PROBLEMS.filter(p => p.l == l).length}</span></div>`).join('')
+  const rowsPz = COLLECTIONS.map(c => {
+    const list = CLASSICS.filter(p => p.src == c.src)
+    return `<div class="row"><span>${t(c.key)}</span><span class="num">${list.filter(p => SES.solved[p.id]).length}</span><span class="num">${list.length}</span></div>`
+  }).join('') + [0, 1, 2, 3].map(l => `<div class="row"><span>${t('pl' + l)}</span><span class="num">${solvedCount(l)}</span><span class="num">${PROBLEMS.filter(p => p.l == l).length}</span></div>`).join('')
   const twoGames = LOG.filter(e => e.t == 'g' && e.opp == 'two').length
   pushedPage(4, '#path', t('path'), t('stats'), `
   <div class="tiles"><div class="tile2"><b class="num">${games.length}</b><span>${t('gamesWithBotN', games.length)}</span></div><div class="tile2"><b class="num">${games.length ? Math.round(wins / games.length * 100) + '%' : '0'}</b><span>${t('wins')}</span></div><div class="tile2"><b class="num">${solvedCount()}</b><span>${t('tasksSolvedN', solvedCount())}</span></div><div class="tile2"><b class="num">${est == null ? t('noneShort') : t('kyuShort', est)}</b><span>${t('approxRank')}</span></div></div>
@@ -379,7 +408,7 @@ function pageSettings() {
   const s = SES.settings
   const sw = (k, on) => `<label class="sw"><input type="checkbox" data-k="${k}" ${on ? 'checked' : ''}><i></i></label>`
   const seg = (k, vals, labels) => `<div class="seg" data-k="${k}">${vals.map((v, i) => `<button type="button" data-v="${v}" class="${String(s[k]) == String(v) ? 'on' : ''}">${labels[i]}</button>`).join('')}</div>`
-  pushedPage('s', '#today', t('today'), t('settings'), `<div class="set">
+  pushedPage('s', '#home', t('home'), t('settings'), `<div class="set">
   <div class="lcap">${t('look')}</div><div class="list">
     <div class="li">${t('theme')}${seg('theme', ['auto', 'light', 'dark'], [t('themeAuto'), t('themeLight'), t('themeDark')])}</div>
     <div class="li">${t('language')}${seg('lang', ['ru', 'en'], ['Русский', 'English'])}</div></div>

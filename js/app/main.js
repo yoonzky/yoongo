@@ -19,7 +19,7 @@ function applyLang() {
 let lastCol = null
 function route() {
   closeMenu()
-  const h = location.hash.slice(1) || 'today'
+  const h = location.hash.slice(1) || 'home'
   const [k, a, b] = h.split('/')
   document.body.classList.toggle('col', isCol())
   lastCol = isCol()
@@ -30,10 +30,10 @@ function route() {
   if (k != 'p') P = null
   if (k != 'r') R = null
   if (k != 'learn') L = null
-  if (k == 'today') pageToday()
+  if (k == 'home' || k == 'today') pageHome()
   else if (k == 'new') isCol() ? pageNew(true) : pageNew(false)
   else if (k == 'play') isCol() ? pageNew(true) : pageNew(false)
-  else if (k == 'tasks') pageTasks(a == null ? null : a, b == null ? 1 : +b)
+  else if (k == 'tasks') pageTasks(a == null ? null : a, b == null ? null : +b)
   else if (k == 'path') pagePath()
   else if (k == 'stats') pageStats()
   else if (k == 'settings') pageSettings()
@@ -41,7 +41,7 @@ function route() {
   else if (k == 'p') openProblem(a)
   else if (k == 'r') openReview(a)
   else if (k == 'learn') openLesson(a)
-  else pageToday()
+  else pageHome()
   const pg = $('.page')
   if (pg) pg.scrollTop = 0
   scrollTo(0, 0)
@@ -78,7 +78,17 @@ function boot() {
     if (e.key == 'Escape' && openMenu) closeMenu()
     if (e.target.closest && e.target.closest('input,textarea')) return
     if (e.metaKey || e.ctrlKey || e.altKey) return
-    if (G && (e.key == 'z' || e.key == 'Z')) undo()
+    if (G && (e.key == 'z' || e.key == 'Z' || e.key == 'я' || e.key == 'Я')) undo()
+    // в задаче: H подсказка, R заново, N следующая
+    if (P && !e.repeat) {
+      const k = e.key.toLowerCase()
+      const id = {h: '#pHint', 'р': '#pHint', r: '#pAgain', 'к': '#pAgain', n: '#pNext', 'т': '#pNext'}[k]
+      const b = id && $(id)
+      if (b && !b.disabled) {
+        e.preventDefault()
+        b.click()
+      }
+    }
     // в разборе стрелки листают ходы, если доска не в фокусе
     if (R && !e.defaultPrevented && (e.key == 'ArrowLeft' || e.key == 'ArrowRight')) {
       e.preventDefault()

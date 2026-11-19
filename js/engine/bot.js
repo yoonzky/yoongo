@@ -432,10 +432,13 @@ function prior(f, p, c, n, root) {
     const lx = lm % W - 1, ly = ((lm / W) | 0) - 1
     if (Math.abs(lx - x) <= 1 && Math.abs(ly - y) <= 1) v += 3
   }
+  let free = 0
+  for (const q of [p + 1, p - 1, p + W, p - W]) if (f.col[q] == EMPTY) free++
   for (const q of [p + 1, p - 1, p + W, p - W]) {
     const cq = f.col[q]
     if (cq == 3 - c && f.atari(f.head[q])) v += 12
-    if (cq == c && f.atari(f.head[q])) v += 6
+    // своя цепочка в атари: удлинение, после которого дыханий от двух, ценится выше
+    if (cq == c && f.atari(f.head[q])) v += free >= 2 ? 20 : 6
   }
   if (f.selfAtari(p, c)) v -= 10
   return v

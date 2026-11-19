@@ -61,9 +61,10 @@ function parseTree(s) {
   return seq()
 }
 
+// номер как на плитке: в книге свой, у своих задач место в уровне
 function problemTitle(pr) {
   if (isClassic(pr)) return t('colShort_' + pr.src) + ', ' + pr.k
-  return t('problemN', pr.id)
+  return t('pl' + pr.l) + ', ' + (listOf(pr).indexOf(pr) + 1)
 }
 
 // keep: заново ту же задачу, неудача и подсказка не забываются
@@ -92,9 +93,16 @@ function openProblem(id, keep) {
     <div id="pState"></div><div id="pTools"></div>`
   const back = isClassic(pr) ? '#tasks/c' + pr.src : '#tasks/' + pr.l
   boardPage({sel: 2, back, backT: t('tasks'), title: problemTitle(pr), main, insp, crop: true})
-  P.view = new BoardView($('#bv'), {n: 19, b: P.b, crop: fitCrop(pr.c), marks: base.marks, turn: BLACK, labels: true, canPlay: p => P.state == 'move' && !P.busy && P.b[p] == EMPTY, onTap: p => problemMove(p)})
+  P.view = new BoardView($('#bv'), {n: 19, b: P.b, crop: fitCrop(pr.c), marks: base.marks, turn: BLACK, labels: true, canPlay: p => P.state == 'move' && !P.busy && P.b[p] == EMPTY, onTap: p => problemMove(p), onPick: () => wrongTap()})
   P.view.draw()
   renderPState()
+}
+
+// после неверного хода касание доски начинает задачу заново
+function wrongTap() {
+  if (P.state != 'wrong') return false
+  openProblem(P.pr.id, true)
+  return true
 }
 
 function renderPState() {

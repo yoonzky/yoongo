@@ -94,13 +94,8 @@ h1.big{font:700 34px/1.1 var(--font-disp);letter-spacing:-.026em}
 .mark-note{font-size:13px;color:var(--text-2);line-height:1.4;padding:0 4px}
 .acts2{display:flex;flex-direction:column;gap:8px}
 
-/* сегодня */
-.today{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;margin-top:22px}
-.today .card{display:flex;flex-direction:column;gap:12px}
-.today .tday{grid-row:span 2;flex-direction:row;gap:18px;align-items:flex-start}
+/* главная */
 .a-btn{display:inline-grid;place-items:center;text-decoration:none}
-.today .tday .goban{width:240px;flex:none;box-shadow:none;cursor:pointer}
-.today .tday .tx{display:flex;flex-direction:column;gap:8px}
 .cont{color:inherit;text-decoration:none;position:relative;display:flex;gap:16px;align-items:center;width:calc(100% + 16px);padding:8px;margin:-8px;text-align:left;border-radius:12px;transition:background-color .12s}
 .cont .mini{width:96px;flex:none}
 .cont .mini .goban{box-shadow:none;border-radius:8px}
@@ -112,13 +107,6 @@ h1.big{font:700 34px/1.1 var(--font-disp);letter-spacing:-.026em}
 .quick{display:flex;gap:8px;flex-wrap:wrap}
 .quick button,.chip{height:34px;padding:0 14px;border-radius:17px;background:var(--tint);color:var(--accent-ink);font-size:14px;font-weight:500;transition:background-color .12s}
 @media (hover:hover){ .quick button:hover{background:var(--tint-2)} }
-.mlane{height:30px;border-radius:9px;background:var(--wood);position:relative;overflow:hidden}
-.mlane::before{content:'';position:absolute;left:0;right:0;top:50%;border-top:1.5px solid var(--wood-line)}
-.mlane span{position:absolute;top:50%;transform:translate(-50%,-50%)}
-.mlane .p{width:6px;height:6px;border-radius:3px;background:var(--wood-star)}
-.mlane .st{width:18px;height:18px}
-.mlane .cur{display:grid;place-items:center}
-.mlane .cur::after{content:'';width:6px;height:6px;border-radius:3px;background:var(--last)}
 .empty{font-size:14px;color:var(--text-2);line-height:1.4}
 
 /* новая партия */
@@ -238,11 +226,8 @@ body.col .insp .players{flex-direction:row;gap:6px}
 body.col .insp .pl{flex:1;padding:8px 10px;gap:9px;min-width:0}
 body.col .insp .pl .clk{font-size:17px}
 body.col .insp .ih,body.col .insp .reccap,body.col .insp .recwrap{display:none}
-body.col .today{grid-template-columns:1fr;gap:12px;margin-top:16px}
-body.col .today .tday{flex-direction:column}
-body.col .today .tday .goban{width:100%}
 body.col .ng{grid-template-columns:1fr;gap:16px;margin-top:14px}
-body.col .ng .prev{width:200px;margin:0 auto}
+body.col .ng .prev{width:150px;margin:0 auto}
 body.col .opt{flex-direction:column;align-items:stretch;gap:6px;min-height:0}
 body.col .opt>span{width:auto;font-size:13px;color:var(--text-2)}
 body.col .form .btn{align-self:stretch}
@@ -327,7 +312,6 @@ body.col .insp .autonext{margin-top:4px}
 .autorow .sw{transform:scale(.85);transform-origin:right center}
 .set .li .tx{flex:1}
 .rankhead.none .big2{font:500 17px/1.3 var(--font);color:var(--text-2);letter-spacing:0}
-.today .tday .tx{min-width:0}
 
 /* средняя ширина: колонка разделов только значками */
 @media (min-width:720px) and (max-width:1099px){
@@ -342,8 +326,6 @@ body.col .insp .autonext{margin-top:4px}
   .sb a.gm .goban{width:30px}
   .page{padding:26px 24px 36px}
   .bmain{padding:16px}
-  .today .tday{flex-direction:column}
-  .today .tday .goban{width:100%;max-width:320px}
 }
 
 /* телефон: листание сборника строкой, лоток партии у нижнего края */
@@ -358,8 +340,6 @@ body.col .app.ins.game .bmain{flex:1;display:grid;align-content:center}
 
 /* урок правил, разбор, сыгранные партии */
 .ltext{font-size:15px;line-height:1.5;color:var(--text-2);padding:0 4px}
-.learnc .btn{align-self:flex-start;margin-top:4px}
-.today .tday .tx .btn{margin-top:8px;align-self:flex-start}
 .optnote{margin:-4px 0 0 98px;line-height:1.4}
 .rres .r-head{font-size:15px;font-weight:600;color:var(--accent);padding:0 4px}
 .rnav{display:flex;align-items:center;gap:12px;padding:0 4px}
@@ -372,10 +352,61 @@ body.col .app.ins.game .bmain{flex:1;display:grid;align-content:center}
 .donelist{margin-top:16px}
 .pz.fresh .n small{color:var(--text-3)}
 body.col .optnote{margin:0}
-body.col .today .tday{flex-direction:row;align-items:center;gap:14px}
-body.col .today .tday .goban{width:42%}
-body.col .today .tday .big2{font-size:18px}
-body.col .today .contc.has,body.col .today .learnc{order:-1}
 body.col .app.ins.lesson,body.col .app.ins.review{display:flex;flex-direction:column;min-height:100dvh}
 body.col .app.ins.lesson .bmain{padding:4px 40px}
 .app.lesson .bmain .goban{max-width:540px}
+/* телефон: "Играть" всегда над вкладками */
+body.col .form #ngGo{position:sticky;bottom:calc(74px + env(safe-area-inset-bottom));z-index:3;box-shadow:0 6px 20px rgba(0,0,0,.22)}
+
+/* главная: главный блок, быстрый старт, сводка */
+.sb a.home{display:block;min-height:0;padding:0;margin:0 10px 20px;background:none}
+.sb a.home .logo{margin:0}
+@media (hover:hover){ .sb a.home:hover{background:none;opacity:.8} }
+.hero{display:grid;grid-template-columns:minmax(200px,270px) minmax(0,1fr);gap:28px;align-items:center;padding:20px;margin-top:6px;border-radius:22px}
+.hero .goban{box-shadow:none;border-radius:12px;display:block}
+.hero .tx{display:flex;flex-direction:column;gap:8px;min-width:0}
+.hero h2{font:700 30px/1.15 var(--font-disp);letter-spacing:-.026em}
+.hero .sm{font-size:15px;line-height:1.45;max-width:420px}
+.hero .acts{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.hero .acts .btn{min-width:150px}
+.hcap{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:30px 2px 12px}
+.hcap b{font:650 20px/1.2 var(--font-disp);letter-spacing:-.016em}
+.hcap .link{font-size:14px}
+.qtiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.qt{background:var(--surface);border-radius:16px;padding:10px 12px 10px 10px;box-shadow:var(--shadow-1);display:flex;align-items:center;gap:12px;text-align:left;min-width:0;transition:transform .2s ease-out,box-shadow .2s ease-out}
+@media (hover:hover){ .qt:hover{transform:translateY(-2px);box-shadow:var(--shadow-h)} }
+.qt:active{transform:scale(.98)}
+.qt .goban{width:52px;flex:none;box-shadow:none;border-radius:7px;display:block}
+.qt .tx{display:flex;flex-direction:column;gap:1px;min-width:0}
+.qt small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qt b{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.qt small{font-size:12px;color:var(--text-2)}
+.hcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:24px}
+.hcards.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.hc{display:flex;flex-direction:column;gap:8px;color:inherit;text-decoration:none;transition:transform .2s ease-out,box-shadow .2s ease-out}
+@media (hover:hover){ .hc:hover{transform:translateY(-2px);box-shadow:var(--shadow-h)} }
+.hc .prog{margin-top:4px}
+.hc.hpz{flex-direction:row;align-items:center;gap:14px}
+.hc.hpz .goban{width:76px;flex:none;box-shadow:none;border-radius:8px}
+.hc.hpz .tx{display:flex;flex-direction:column;gap:3px;min-width:0}
+.hc.hpz .tx>b:not(.h){font-size:15px;font-weight:600;line-height:1.25}
+.hhead{display:flex;align-items:center;justify-content:space-between;margin:2px 0 14px}
+.hhead .logo{font-size:30px}
+@media (min-width:720px) and (max-width:1099px){
+  .sb a.home{margin:0 0 16px;text-align:center}
+  .hero{grid-template-columns:minmax(170px,240px) minmax(0,1fr);gap:20px}
+  .qtiles{display:flex;flex-wrap:wrap}
+  .qt{flex:1 1 30%}
+  .hcards.three{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+body.col .hero{grid-template-columns:40% minmax(0,1fr);gap:14px;padding:14px;margin-top:0}
+body.col .hero h2{font-size:21px}
+body.col .hero .sm{font-size:13px}
+body.col .hero .acts{flex-direction:column;gap:8px;margin-top:6px}
+body.col .hero .acts .btn{min-width:0;height:40px;font-size:15px;width:100%}
+body.col .hcap{margin:24px 2px 10px}
+body.col .qtiles{display:flex;overflow-x:auto;margin:0 -16px;padding:2px 16px 8px;gap:10px;scrollbar-width:none}
+body.col .qtiles::-webkit-scrollbar{display:none}
+body.col .qt{flex:none;width:auto;padding:8px 14px 8px 8px}
+body.col .qt .goban{width:44px}
+body.col .hcards,body.col .hcards.three{grid-template-columns:1fr;margin-top:16px;gap:10px}
