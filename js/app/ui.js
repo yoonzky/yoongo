@@ -33,6 +33,8 @@ const I = {
 const ic = (k, cls = 'icon') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${I[k]}</svg>`
 const CH = '<svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></svg>'
 const LOGO = '<span class="logo"><span class="lt">yoon</span>go</span>'
+// знак: четыре камня берут пятый, как на иконке
+const MARK = '<svg class="mark" viewBox="0 0 512 512" aria-hidden="true"><circle cx="256" cy="132" r="56"/><circle cx="132" cy="256" r="56"/><circle cx="256" cy="256" r="56" class="c"/><circle cx="380" cy="256" r="56"/><circle cx="256" cy="380" r="56"/></svg>'
 const st = c => `<span class="st ${c == BLACK || c == 'b' ? 'b' : 'w'}"></span>`
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]))
 const $ = (s, r = document) => r.querySelector(s)

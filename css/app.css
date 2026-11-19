@@ -318,8 +318,8 @@ body.col .insp .autonext{margin-top:4px}
   .app{grid-template-columns:64px minmax(0,1fr)}
   .app.ins{grid-template-columns:64px minmax(0,1fr) 280px}
   .sb{padding:18px 8px;align-items:stretch}
-  .sb .logo{font-size:0;margin:0 0 16px;text-align:center}
-  .sb .logo::after{content:'go';font-size:22px;color:var(--accent)}
+  .sb .logo{display:none}
+  .sb a.home .mark{display:block;width:34px;height:34px;margin:0 auto}
   .sb a{font-size:0;justify-content:center;padding:0;gap:0}
   .sb a .icon{width:22px;height:22px}
   .sb a .cnt,.sb .cap,.sb a.gm span{display:none}
@@ -361,6 +361,8 @@ body.col .form #ngGo{position:sticky;bottom:calc(74px + env(safe-area-inset-bott
 /* главная: главный блок, быстрый старт, сводка */
 .sb a.home{display:block;min-height:0;padding:0;margin:0 10px 20px;background:none}
 .sb a.home .logo{margin:0}
+.sb .mark{display:none;fill:var(--accent)}
+.sb .mark .c{fill:var(--fill)}
 @media (hover:hover){ .sb a.home:hover{background:none;opacity:.8} }
 .hero{display:grid;grid-template-columns:minmax(200px,270px) minmax(0,1fr);gap:28px;align-items:center;padding:20px;margin-top:6px;border-radius:22px}
 .hero .goban{box-shadow:none;border-radius:12px;display:block}

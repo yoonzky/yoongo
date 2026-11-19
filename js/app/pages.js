@@ -11,7 +11,7 @@ const miniBoard = g => `<div class="goban">${miniBoardSvg(g)}</div>`
 
 function sidebar(sel) {
   const games = SES.games.filter(g => !g.over)
-  return `<aside class="sb"><a href="#home" class="home" aria-label="${t('home')}">${LOGO}</a>
+  return `<aside class="sb"><a href="#home" class="home" aria-label="${t('home')}">${LOGO}${MARK}</a>
     ${NAV.map(([i, k, h], n) => n == 0 ? '' : `<a href="${h}" title="${t(k)}" class="${n === sel ? 'on' : ''}">${ic(i)}${t(k)}${n == 2 ? `<span class="cnt" id="sbCnt">${t('nOf', solvedCount(), totalProblems())}</span>` : ''}</a>`).join('')}
     <div id="sbGames">${sideGames(games, sel)}</div>
     <div class="spacer"></div>
