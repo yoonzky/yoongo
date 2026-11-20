@@ -207,6 +207,8 @@ button.li:active{background:var(--row-press)}
 
 /* настройки */
 .set{max-width:620px}
+/* настройки узкой колонкой по центру вместе с заголовком */
+.page .in:has(> .set){max-width:620px}
 .set .lcap{margin-top:24px}
 .set .li .seg{margin-left:auto;width:300px}
 .set .li .sw{margin-left:auto}
