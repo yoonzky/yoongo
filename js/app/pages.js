@@ -87,9 +87,10 @@ const QUICK = [
   {k: 'capture', o: {opp: 'bot', n: 9, goal: 'cap'}, st: [['ee', WHITE], ['de', BLACK], ['ed', BLACK], ['fe', BLACK]]},
 ]
 
-// значок быстрого старта: доска нужного размера, у вдвоём и захвата пара камней
+// значок быстрого старта: размер доски числом на дереве, у вдвоём и захвата камни
 function quickGlyph(q) {
   const n = q.o.n
+  if (!q.st) return `<span class="goban qn num" aria-hidden="true">${n}</span>`
   const b = newBoard(n)
   for (const [v, c] of q.st || []) b[fromSgf(n, v)] = c
   return `<span class="goban">${goSVG({n, b})}</span>`
@@ -332,7 +333,7 @@ function pageStats() {
   const games = LOG.filter(e => e.t == 'g' && e.opp == 'bot' && e.win != null)
   const wins = games.filter(e => e.win).length
   const est = rankEstimate()
-  const chart = rankChart()
+  const pts = rankPoints()
   const rowsBot = [0, 1, 2, 3].map(l => {
     const s = botStats(l)
     return s.n ? `<div class="row"><span>${t('lv' + l)}</span><span class="num">${s.w}</span><span class="num">${s.n}</span></div>` : ''
@@ -344,34 +345,80 @@ function pageStats() {
   const twoGames = LOG.filter(e => e.t == 'g' && e.opp == 'two').length
   pushedPage(4, '#path', t('path'), t('stats'), `
   <div class="tiles"><div class="tile2"><b class="num">${games.length}</b><span>${t('gamesWithBotN', games.length)}</span></div><div class="tile2"><b class="num">${games.length ? Math.round(wins / games.length * 100) + '%' : t('noneShort')}</b><span>${t('wins')}</span></div><div class="tile2"><b class="num">${solvedCount()}</b><span>${t('tasksSolvedN', solvedCount())}</span></div><div class="tile2"><b class="num">${est == null ? t('noneShort') : t('kyuShort', est)}</b><span>${t('approxRank')}</span></div></div>
-  <div class="card chart"><b class="h">${t('rankByWeek')}</b>${chart || `<p class="empty" style="margin-top:8px">${t('chartEmpty')}</p>`}</div>
-  <div class="two"><div class="card tbl"><b class="h">${t('vsBot')}</b>${rowsBot ? `<div class="row hd"><span>${t('level')}</span><span>${t('winsCol')}</span><span>${t('gamesCol')}</span></div>${rowsBot}` : `<p class="empty" style="padding-top:8px">${t('noBotGames')}</p>`}</div>
+  <div class="card chart"><b class="h">${t('rankByWeek')}</b>${pts ? '<div class="rchart" id="rChart" role="img" tabindex="0"></div>' : `<p class="empty" style="margin-top:8px">${t('chartEmpty')}</p>`}</div>
+  <div class="two"><div class="card tbl"><b class="h">${t('vsBot')}</b>${rowsBot ? `<div class="row hd"><span>${t('level')}</span><span>${t('winsCol')}</span><span>${t('gamesCol')}</span></div>${rowsBot}` : `<p class="empty" style="padding-top:8px">${t('noBotGames')}</p>`}${twoGames ? `<p class="sm twon">${t('twoGamesN', twoGames)}</p>` : ''}</div>
     <div class="card tbl"><b class="h">${t('tasks')}</b><div class="row hd"><span>${t('level')}</span><span>${t('solvedCol')}</span><span>${t('totalCol')}</span></div>${rowsPz}</div></div>
-  ${twoGames ? `<p class="sm" style="margin-top:14px">${t('twoGamesN', twoGames)}</p>` : ''}
   <div class="lcap donecap">${t('doneHead')}</div><div class="card games">${doneList()}</div>`)
+  if (pts) drawRankChart(pts)
 }
 
 // сила по неделям: оценка по журналу на конец каждой недели
-function rankChart() {
-  if (!LOG.length) return ''
+function rankPoints() {
   const wk = 7 * 864e5
   const end = Date.now()
   const pts = []
   for (let i = 9; i >= 0; i--) {
     const cut = end - i * wk
-    const r = rankEstimate(LOG.filter(e => e.date <= cut))
-    if (r != null) pts.push(r)
+    const k = rankEstimate(LOG.filter(e => e.date <= cut))
+    if (k != null) pts.push({k, d: cut})
   }
-  if (pts.length < 2) return ''
-  const w = 600, h = 160
-  const lo = Math.min(...pts) - 2, hi = Math.max(...pts) + 2
-  const x = i => 20 + i * (w - 40) / (pts.length - 1)
-  const y = k => 14 + (k - lo) / (hi - lo) * (h - 28)
-  let s = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">`
-  for (let k = Math.ceil(lo / 5) * 5; k <= hi; k += 5) s += `<line x1="0" x2="${w}" y1="${y(k)}" y2="${y(k)}" style="stroke:var(--sep)" stroke-width="1" vector-effect="non-scaling-stroke"/><text x="${w - 4}" y="${y(k) - 4}" text-anchor="end" font-size="11" style="fill:var(--text-3)">${t('kyuShort', k)}</text>`
-  s += `<polyline points="${pts.map((k, i) => x(i) + ',' + y(k)).join(' ')}" fill="none" style="stroke:var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`
-  s += `<circle cx="${x(pts.length - 1)}" cy="${y(pts[pts.length - 1])}" r="4.5" style="fill:var(--accent)"/>`
-  return s + '</svg>'
+  return pts.length < 2 ? null : pts
+}
+
+// svg в пикселях блока, подписи и точка не растягиваются
+function drawRankChart(pts) {
+  const box = $('#rChart')
+  if (!box) return
+  const w = Math.max(240, box.clientWidth), h = 180
+  const L = 44, R = 12, T = 12, B = 28
+  const lo = Math.min(...pts.map(p => p.k)) - 2, hi = Math.max(...pts.map(p => p.k)) + 2
+  const x = i => L + i * (w - L - R) / (pts.length - 1)
+  // меньше кю выше
+  const y = k => T + (k - lo) / (hi - lo) * (h - T - B)
+  let s = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">`
+  for (let k = Math.ceil(lo / 5) * 5; k <= hi; k += 5) s += `<line x1="${L}" x2="${w - R}" y1="${y(k)}" y2="${y(k)}" style="stroke:var(--sep)" stroke-width="1"/><text x="${L - 8}" y="${y(k) + 4}" text-anchor="end" font-size="11" style="fill:var(--text-2)">${t('kyuShort', k)}</text>`
+  const dl = i => `<text x="${x(i)}" y="${h - 8}" text-anchor="${i ? 'end' : 'start'}" font-size="11" style="fill:var(--text-2)">${dayStr(pts[i].d)}</text>`
+  s += dl(0) + dl(pts.length - 1)
+  s += `<line class="xh" y1="${T}" y2="${h - B}" style="stroke:var(--rule)" stroke-width="1" visibility="hidden"/>`
+  s += `<polyline points="${pts.map((p, i) => x(i) + ',' + y(p.k)).join(' ')}" fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
+  const last = pts.length - 1
+  s += `<circle class="dot" cx="${x(last)}" cy="${y(pts[last].k)}" r="4" style="fill:var(--accent);stroke:var(--surface)" stroke-width="2"/>`
+  box.innerHTML = s + `</svg><div class="tip" hidden></div>`
+  box.setAttribute('aria-label', t('rankChartLabel', pts[0].k, pts[last].k, pts.length))
+  const svg = $('svg', box), xh = $('.xh', box), dot = $('.dot', box), tip = $('.tip', box)
+  const show = i => {
+    i = Math.max(0, Math.min(last, i))
+    box.dataset.i = i
+    xh.setAttribute('x1', x(i))
+    xh.setAttribute('x2', x(i))
+    xh.setAttribute('visibility', 'visible')
+    dot.setAttribute('cx', x(i))
+    dot.setAttribute('cy', y(pts[i].k))
+    tip.hidden = false
+    tip.innerHTML = `<span class="sm">${t('weekTo', dayStr(pts[i].d))}</span><b>${t('aboutKyu', pts[i].k)}</b>`
+    const r = svg.getBoundingClientRect(), k = r.width / w
+    tip.style.left = Math.min(r.width - tip.offsetWidth, Math.max(0, x(i) * k - tip.offsetWidth / 2)) + 'px'
+  }
+  const hide = () => {
+    xh.setAttribute('visibility', 'hidden')
+    dot.setAttribute('cx', x(last))
+    dot.setAttribute('cy', y(pts[last].k))
+    tip.hidden = true
+    delete box.dataset.i
+  }
+  // перекрестие ищет ближайшую неделю по x
+  svg.addEventListener('pointermove', e => {
+    const r = svg.getBoundingClientRect()
+    show(Math.round(((e.clientX - r.left) / r.width * w - L) / (w - L - R) * last))
+  })
+  svg.addEventListener('pointerleave', hide)
+  box.addEventListener('blur', hide)
+  box.addEventListener('keydown', e => {
+    if (e.key != 'ArrowLeft' && e.key != 'ArrowRight') return
+    e.preventDefault()
+    const i = box.dataset.i == null ? last : +box.dataset.i
+    show(i + (e.key == 'ArrowLeft' ? -1 : 1))
+  })
 }
 
 function pagePath() {

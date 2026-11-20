@@ -25,7 +25,7 @@ svg{display:block}
 .seg button:active:not(.on){color:var(--text-3)}
 .seg button.on{background:var(--thumb);color:var(--text);box-shadow:0 .5px 1.5px rgba(20,30,50,.12),0 2px 6px rgba(20,30,50,.06)}
 
-.btn{height:46px;padding:0 22px;border-radius:12px;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:16px;letter-spacing:-.01em;transition:transform .1s ease-out}
+.btn{height:46px;padding:0 22px;border-radius:12px;background:var(--btn,var(--accent));color:var(--on-accent);font-weight:600;font-size:16px;letter-spacing:-.01em;transition:transform .1s ease-out}
 .btn:active{transform:scale(.97)}
 @media (hover:hover){ .btn:hover{background-image:linear-gradient(var(--hover),var(--hover))} }
 .btn.soft{background:var(--tint);color:var(--accent-ink)}

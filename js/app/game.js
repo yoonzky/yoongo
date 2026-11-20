@@ -65,7 +65,7 @@ function openGame(id) {
 
 function humanTurn() {
   const {rec, go} = G
-  if (rec.over || rec.phase != 'play' || G.think) return false
+  if (rec.over || rec.phase != 'play' || G.think || G.paused) return false
   return rec.opp != 'bot' || go.turn == rec.human
 }
 
@@ -120,6 +120,9 @@ function renderPanel() {
   const el = $('#gPanel')
   // при подсчёте в инспекторе только счёт, как в макете
   const scoring = rec.phase == 'score' && !rec.over
+  // на паузе доска закрыта, пока часы снова не пойдут
+  const bm = $('.bmain')
+  if (bm) bm.classList.toggle('paused', !!G.paused && !rec.over && rec.phase == 'play')
   const insp = $('.insp')
   if (insp) insp.classList.toggle('scoring', scoring)
   const h2 = $('.insp .ih h2')
@@ -160,10 +163,12 @@ function renderPanel() {
     $('#gResume').onclick = resumePlay
     return
   }
-  const canUndo = rec.moves.length > 0 && !G.think && (rec.opp != 'bot' || (SES.settings.undo && rec.moves.some((m, i) => colorAt(i) == rec.human)))
-  el.innerHTML = `<div class="tools"><button type="button" class="tool" id="tUndo" ${canUndo ? '' : 'disabled'}>${ic('undo')}${t('undo')}</button><button type="button" class="tool" id="tPass" ${humanTurn() ? '' : 'disabled'}>${ic('pass')}${t('pass')}</button><button type="button" class="tool ${G.own ? 'on' : ''}" id="tEst" aria-pressed="${!!G.own}"${rec.goal == 'cap' || go.moves.length < 2 ? 'disabled' : ''}>${ic('area')}${t('estimate')}</button></div>`
+  const canUndo = rec.moves.length > 0 && !G.think && !G.paused && (rec.opp != 'bot' || (SES.settings.undo && rec.moves.some((m, i) => colorAt(i) == rec.human)))
+  const pause = G.paused ? `<div class="tstate paused"><span>${t('clockPaused')}</span><button type="button" class="link" id="tRun">${t('resumeClock')}</button></div>` : ''
+  el.innerHTML = `${pause}<div class="tools"><button type="button" class="tool" id="tUndo" ${canUndo ? '' : 'disabled'}>${ic('undo')}${t('undo')}</button><button type="button" class="tool" id="tPass" ${humanTurn() ? '' : 'disabled'}>${ic('pass')}${t('pass')}</button><button type="button" class="tool ${G.own ? 'on' : ''}" id="tEst" aria-pressed="${!!G.own}" ${rec.goal == 'cap' || go.moves.length < 2 ? 'disabled' : ''}>${ic('area')}${t('estimate')}</button></div>`
   $('#tUndo').onclick = undo
   $('#tPass').onclick = () => humanPlay(PASS)
+  if (G.paused) $('#tRun').onclick = togglePause
   $('#tEst').onclick = toggleEstimate
 }
 
@@ -308,6 +313,7 @@ async function maybeBot() {
   // минимальная пауза, чтобы ход бота не выскакивал мгновенно
   const wait = 350 - (Date.now() - t0)
   if (wait > 0) await new Promise(res => setTimeout(res, wait))
+  while (G && G.paused && G.token == token) await new Promise(res => setTimeout(res, 200))
   if (!G || G.token != token || G.rec != rec || rec.over) return
   G.think = false
   if (!r || r.error) {
@@ -432,6 +438,12 @@ function finish(o) {
   renderSide()
 }
 
+function togglePause() {
+  G.paused = !G.paused
+  toast(G.paused ? t('clockPaused') : t('clockRuns'))
+  renderSide()
+}
+
 function resign() {
   const {rec} = G
   const loser = rec.opp == 'bot' ? rec.human : G.go.turn
@@ -441,10 +453,7 @@ function resign() {
 function gameMenu(btn) {
   const {rec} = G
   const items = []
-  if (!rec.over && rec.clock) items.push({t: G.paused ? t('resumeClock') : t('pauseClock'), icon: G.paused ? 'play' : 'pause', fn: () => {
-    G.paused = !G.paused
-    toast(G.paused ? t('clockPaused') : t('clockRuns'))
-  }})
+  if (!rec.over && rec.clock && rec.phase == 'play') items.push({t: G.paused ? t('resumeClock') : t('pauseClock'), icon: G.paused ? 'play' : 'pause', fn: togglePause})
   if (!rec.over) {
     items.push({t: rec.opp == 'bot' ? t('resign') : t('resignTurn'), icon: 'flag', fn: () => alertBox(t('resignQ'), '', [{t: t('cancel')}, {t: t('resign'), cls: 'danger', fn: resign}])})
     items.push({t: t('delGame'), icon: 'trash', cls: 'danger', fn: () => alertBox(t('delQ'), t('delText'), [{t: t('cancel')}, {t: t('delete'), cls: 'danger', fn: () => {

@@ -35,7 +35,7 @@
   --bg:#131417; --surface:#1c1e22; --surface-2:#272a2f; --raise:#25282c;
   --text:#d4d7dd; --text-2:#959ba5; --text-3:#777d87;
   --sep:rgba(210,220,240,.09); --cell-line:#2c2f35; --rule:#5d636d;
-  --accent:#5f9cee; --accent-ink:#86b4f3; --digit:#6aa3f0; --on-accent:#10161f;
+  --accent:#5f9cee; --accent-ink:#86b4f3; --digit:#6aa3f0; --on-accent:#e9eef6; --btn:#3a6bb0;
   --tint:rgba(95,156,238,.13); --tint-2:rgba(95,156,238,.24); --sel:rgba(95,156,238,.3);
   --peer:rgba(200,212,235,.04); --red:#de746c; --red-tint:rgba(222,116,108,.15);
   --hover:rgba(210,220,240,.05); --press:rgba(210,220,240,.1);
