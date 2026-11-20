@@ -53,20 +53,30 @@ function toast(msg) {
 
 // окно с вопросом; acts: [{t, cls, fn}]
 function alertBox(title, text, acts) {
+  const back = document.activeElement
   const bg = document.createElement('div')
   bg.className = 'alert-bg'
-  bg.innerHTML = `<div class="alert" role="alertdialog" tabindex="-1">${title ? `<b${text ? '' : ' class="solo"'}>${esc(title)}</b>` : ''}${text ? `<p>${esc(text)}</p>` : ''}<div class="acts">${acts.map((a, i) => `<button type="button" class="${a.cls || ''}" data-i="${i}">${esc(a.t)}</button>`).join('')}</div></div>`
+  bg.innerHTML = `<div class="alert" role="alertdialog" aria-modal="true" tabindex="-1">${title ? `<b${text ? '' : ' class="solo"'}>${esc(title)}</b>` : ''}${text ? `<p>${esc(text)}</p>` : ''}<div class="acts">${acts.map((a, i) => `<button type="button" class="${a.cls || ''}" data-i="${i}">${esc(a.t)}</button>`).join('')}</div></div>`
   document.body.appendChild(bg)
   requestAnimationFrame(() => bg.classList.add('on'))
   const close = () => {
     bg.classList.remove('on')
     setTimeout(() => bg.remove(), 180)
-    removeEventListener('keydown', key)
+    removeEventListener('keydown', key, true)
+    if (back && back.isConnected) back.focus()
   }
+  // фокус не уходит из окна, клавиши страницы под ним не срабатывают
   const key = e => {
+    e.stopPropagation()
     if (e.key == 'Escape') close()
+    if (e.key == 'Tab') {
+      const bs = $$('button', bg)
+      const i = bs.indexOf(document.activeElement)
+      e.preventDefault()
+      bs[(i + (e.shiftKey ? bs.length - 1 : 1)) % bs.length].focus()
+    }
   }
-  addEventListener('keydown', key)
+  addEventListener('keydown', key, true)
   bg.addEventListener('click', e => {
     const b = e.target.closest('button')
     if (b) {
@@ -75,13 +85,14 @@ function alertBox(title, text, acts) {
       if (a.fn) a.fn()
     } else if (e.target == bg) close()
   })
-  $('.alert', bg).focus()
+  $('.alert button', bg).focus()
 }
 
 // меню у кнопки; items: [{t, icon, on, cls, fn}]
-let openMenu = null
+let openMenu = null, menuBtn = null
 function menuAt(btn, items) {
   closeMenu()
+  menuBtn = btn
   const m = document.createElement('div')
   m.className = 'menu'
   m.setAttribute('role', 'menu')
@@ -98,19 +109,52 @@ function menuAt(btn, items) {
   m.addEventListener('click', e => {
     const b = e.target.closest('button')
     if (!b) return
-    closeMenu()
+    closeMenu(true)
     items[+b.dataset.i].fn()
   })
+  // стрелки по пунктам, Escape и Tab закрывают
+  m.addEventListener('keydown', e => {
+    const bs = $$('button', m)
+    const i = bs.indexOf(document.activeElement)
+    if (e.key == 'ArrowDown' || e.key == 'ArrowUp') {
+      e.preventDefault()
+      bs[(i + (e.key == 'ArrowDown' ? 1 : bs.length - 1)) % bs.length].focus()
+    } else if (e.key == 'Escape' || e.key == 'Tab') {
+      e.preventDefault()
+      e.stopPropagation()
+      closeMenu(true)
+    }
+  })
   openMenu = m
+  btn.setAttribute('aria-expanded', 'true')
+  const first = $('.on', m) || $('button', m)
+  first.focus({preventScroll: true})
   setTimeout(() => addEventListener('pointerdown', outside), 0)
 }
 function outside(e) {
   if (openMenu && !openMenu.contains(e.target)) closeMenu()
 }
-function closeMenu() {
+function closeMenu(refocus) {
   if (openMenu) openMenu.remove()
   openMenu = null
   removeEventListener('pointerdown', outside)
+  if (menuBtn) {
+    menuBtn.setAttribute('aria-expanded', 'false')
+    if (refocus && menuBtn.isConnected) menuBtn.focus()
+  }
+  menuBtn = null
+}
+
+// после перерисовки страницы фокус возвращается на ту же кнопку
+function keepFocus(fn) {
+  const a = document.activeElement
+  let sel = null
+  if (a && a.id) sel = '#' + a.id
+  else if (a && a.dataset.v != null && a.closest('[data-k]')) sel = `[data-k="${a.closest('[data-k]').dataset.k}"] [data-v="${a.dataset.v}"]`
+  else if (a && a.dataset.l != null) sel = `.lvl [data-l="${a.dataset.l}"]`
+  fn()
+  const b = sel && $(sel)
+  if (b) b.focus({preventScroll: true})
 }
 
 // движок в воркере; с file:// воркер не стартует, тогда в окне

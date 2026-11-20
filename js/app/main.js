@@ -75,10 +75,10 @@ function boot() {
     if (document.hidden) writeSes()
   })
   addEventListener('keydown', e => {
-    if (e.key == 'Escape' && openMenu) closeMenu()
-    if (e.target.closest && e.target.closest('input,textarea')) return
+    if (e.key == 'Escape' && openMenu) closeMenu(true)
+    if (openMenu || (e.target.closest && e.target.closest('input,textarea'))) return
     if (e.metaKey || e.ctrlKey || e.altKey) return
-    if (G && (e.key == 'z' || e.key == 'Z' || e.key == 'я' || e.key == 'Я')) undo()
+    if (G && !e.repeat && (e.key == 'z' || e.key == 'Z' || e.key == 'я' || e.key == 'Я')) undo()
     // в задаче: H подсказка, R заново, N следующая
     if (P && !e.repeat) {
       const k = e.key.toLowerCase()

@@ -94,7 +94,8 @@ function renderSide() {
     const sub = rec.goal == 'cap' ? t('takenOf', capd, rec.capN) : t('taken', capd)
     const on = !rec.over && rec.phase == 'play' && go.turn == c
     const dots = on && G.think && rec.opp == 'bot' && c != rec.human ? '<span class="think"><i></i><i></i><i></i></span>' : ''
-    return `<div class="pl ${on ? 'on' : ''}">${st(c)}<span class="tx"><b>${me}${dots}</b><small>${sub}</small></span><span class="clk num" data-c="${c}">${clockText(c)}</span></div>`
+    const low = rec.clock && rec.tm[c].m <= 0 && rec.tm[c].l <= 10
+    return `<div class="pl ${on ? 'on' : ''}">${st(c)}<span class="tx"><b>${me}${dots}</b><small>${sub}</small></span><span class="clk num ${low ? 'low' : ''}" data-c="${c}">${clockText(c)}</span></div>`
   }
   $('#gPl').innerHTML = pl(BLACK) + pl(WHITE)
   renderPanel()
@@ -126,10 +127,11 @@ function renderPanel() {
   if (rec.over) {
     const o = rec.over
     let head, big, rows = ''
-    if (rec.opp == 'bot') head = o.winner == rec.human ? t('youWon') : t('youLost')
+    if (!o.winner) head = t('draw')
+    else if (rec.opp == 'bot') head = o.winner == rec.human ? t('youWon') : t('youLost')
     else head = o.winner == BLACK ? t('blackWon') : t('whiteWon')
     if (o.reason == 'score') {
-      big = `<span class="r-time num">${o.winner == BLACK ? t('blackShort') : t('whiteShort')}+${fmtNum(o.margin)}</span>`
+      big = `<span class="r-time num">${!o.winner ? t('even') : (o.winner == BLACK ? t('blackShort') : t('whiteShort')) + '+' + fmtNum(o.margin)}</span>`
       rows = scoreRows(rec, o)
     } else {
       let why = t('end_' + o.reason, rec.capN)
@@ -150,7 +152,7 @@ function renderPanel() {
       return
     }
     const lead = s.b - s.w - gameKomi(rec)
-    el.innerHTML = `<div class="result keep"><span class="r-head">${lead > 0 ? t('blackAhead') : t('whiteAhead')}</span><span class="r-time num">+${fmtNum(Math.abs(lead))}</span>
+    el.innerHTML = `<div class="result keep"><span class="r-head">${lead > 0 ? t('blackAhead') : lead < 0 ? t('whiteAhead') : t('even')}</span><span class="r-time num">${lead ? '+' + fmtNum(Math.abs(lead)) : '0'}</span>
       ${scoreRows(rec, s)}</div>
       <p class="mark-note">${t('deadNote')}</p>
       <div class="acts2"><button type="button" class="btn" id="gAccept">${t('accept')}</button><button type="button" class="btn plain" id="gResume">${t('resume')}</button></div>`
@@ -159,7 +161,7 @@ function renderPanel() {
     return
   }
   const canUndo = rec.moves.length > 0 && !G.think && (rec.opp != 'bot' || (SES.settings.undo && rec.moves.some((m, i) => colorAt(i) == rec.human)))
-  el.innerHTML = `<div class="tools"><button type="button" class="tool" id="tUndo" ${canUndo ? '' : 'disabled'}>${ic('undo')}${t('undo')}</button><button type="button" class="tool" id="tPass" ${humanTurn() ? '' : 'disabled'}>${ic('pass')}${t('pass')}</button><button type="button" class="tool ${G.own ? 'on' : ''}" id="tEst" ${rec.goal == 'cap' || go.moves.length < 2 ? 'disabled' : ''}>${ic('area')}${t('estimate')}</button></div>`
+  el.innerHTML = `<div class="tools"><button type="button" class="tool" id="tUndo" ${canUndo ? '' : 'disabled'}>${ic('undo')}${t('undo')}</button><button type="button" class="tool" id="tPass" ${humanTurn() ? '' : 'disabled'}>${ic('pass')}${t('pass')}</button><button type="button" class="tool ${G.own ? 'on' : ''}" id="tEst" aria-pressed="${!!G.own}"${rec.goal == 'cap' || go.moves.length < 2 ? 'disabled' : ''}>${ic('area')}${t('estimate')}</button></div>`
   $('#tUndo').onclick = undo
   $('#tPass').onclick = () => humanPlay(PASS)
   $('#tEst').onclick = toggleEstimate
@@ -311,8 +313,11 @@ async function maybeBot() {
   if (!r || r.error) {
     toast(t('botError'))
     renderSide()
+    G.botFail = (G.botFail || 0) + 1
+    if (G.botFail < 2) setTimeout(() => G && G.rec == rec && maybeBot(), 1000)
     return
   }
+  G.botFail = 0
   // сдаётся, если два хода подряд видит почти верный проигрыш
   if (r.resign) G.lowWr++
   else G.lowWr = 0
@@ -396,7 +401,7 @@ function acceptScore() {
   const {rec} = G
   const s = G.score
   const lead = s.b - s.w - gameKomi(rec)
-  finish({winner: lead > 0 ? BLACK : WHITE, reason: 'score', margin: Math.abs(lead), b: s.b, w: s.w})
+  finish({winner: lead > 0 ? BLACK : lead < 0 ? WHITE : 0, reason: 'score', margin: Math.abs(lead), b: s.b, w: s.w})
 }
 
 function resumePlay() {
@@ -420,7 +425,7 @@ function finish(o) {
   const {tm, ...keep} = rec
   if (rec.moves.length) SES.done = [{...keep, end: Date.now(), dead: o.reason == 'score' && G.dead ? [...G.dead] : null}, ...(SES.done || []).filter(g => g.id != rec.id)].slice(0, MAX_DONE)
   writeSes()
-  const win = rec.opp == 'bot' ? o.winner == rec.human : null
+  const win = rec.opp == 'bot' && o.winner ? o.winner == rec.human : null
   LOG.push({t: 'g', opp: rec.opp, n: rec.n, level: rec.level, goal: rec.goal, hcap: rec.hcap, human: rec.human, win, reason: o.reason, margin: o.margin || 0, moves: rec.moves.length, undos: rec.undos, date: Date.now()})
   saveLog()
   if (G.view) G.view.set({b: G.go.b, own: null})
@@ -470,7 +475,8 @@ function toSGF(rec) {
   const dt = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
   let s = `(;GM[1]FF[4]CA[UTF-8]AP[Yoongo]SZ[${rec.n}]KM[${rec.komi}]RU[Chinese]DT[${dt}]`
   const o = rec.over
-  if (o) s += `RE[${o.winner == BLACK ? 'B' : 'W'}+${o.reason == 'score' ? o.margin : o.reason == 'resign' ? 'R' : o.reason == 'time' ? 'T' : ''}]`
+  if (o && !o.winner) s += 'RE[0]'
+  else if (o) s += `RE[${o.winner == BLACK ? 'B' : 'W'}+${o.reason == 'score' ? o.margin : o.reason == 'resign' ? 'R' : o.reason == 'time' ? 'T' : ''}]`
   if (rec.hcap >= 2) s += `HA[${rec.hcap}]AB` + handicapPoints(rec.n, rec.hcap).map(p => `[${toSgf(rec.n, p)}]`).join('')
   if (rec.opp == 'bot') s += rec.human == BLACK ? 'PB[You]PW[Yoongo bot]' : 'PB[Yoongo bot]PW[You]'
   rec.moves.forEach((m, i) => {

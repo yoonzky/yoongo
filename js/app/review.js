@@ -7,6 +7,7 @@ let R = null
 // итог одной строкой: "Победа, Б+6,5", "Чёрные, сдача"
 function resultText(g) {
   const o = g.over
+  if (!o.winner) return t('draw')
   const head = g.opp == 'bot' ? (o.winner == g.human ? t('youWon') : t('youLost')) : o.winner == BLACK ? t('blackWon') : t('whiteWon')
   const tail = o.reason == 'score' ? (o.winner == BLACK ? t('blackShort') : t('whiteShort')) + '+' + fmtNum(o.margin) : t('by_' + o.reason)
   return head + ', ' + tail
@@ -48,11 +49,11 @@ function openReview(id) {
   }
   $$('#rMore, #navMore').forEach(b => b.addEventListener('click', () => menuAt(b, [
     {t: t('copySgf'), icon: 'copy', fn: () => copySGF(rec)},
-    {t: t('delDone'), icon: 'trash', cls: 'danger', fn: () => {
+    {t: t('delDone'), icon: 'trash', cls: 'danger', fn: () => alertBox(t('delDoneQ'), '', [{t: t('cancel')}, {t: t('delete'), cls: 'danger', fn: () => {
       SES.done = SES.done.filter(g => g.id != rec.id)
       writeSes()
       location.hash = '#stats'
-    }},
+    }}])},
   ])))
   renderReviewRec()
   reviewAt(R.k)
